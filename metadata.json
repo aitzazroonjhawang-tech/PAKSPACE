@@ -1,0 +1,6 @@
+{
+  "name": "PakSpace",
+  "description": "A premium, minimalist social platform for Pakistani students to discover opportunities, share ideas, ask questions, and build communities.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

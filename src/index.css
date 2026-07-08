@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-serif: "Lora", "Georgia", serif;
+  --font-display: "Lora", "Georgia", serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-cream: #FCFBF7;
+  --color-charcoal: #191919;
+  --color-border-subtle: #EBEAE4;
+  --color-forest: #004D34;
+  --color-forest-hover: #003322;
+}
+
+/* Custom premium styles matching Substack Editorial */
+body {
+  font-family: var(--font-sans);
+  background-color: #FCFBF7; /* Cream background */
+  color: #191919; /* Dark editorial text */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #EBEAE4;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D5D4CD;
+}
+
+/* Glassmorphism/Card utility classes adapted for Substack warmth */
+.glass-panel {
+  background: #FCFBF7;
+  border: 1px solid #EBEAE4;
+}
+
+.glass-panel-light {
+  background: rgba(252, 251, 247, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(235, 234, 228, 0.5);
+}
+
+/* Subtle accent glows */
+.glow-accent {
+  box-shadow: 0 4px 20px -2px rgba(0, 77, 52, 0.05);
+}
+
+.glow-accent-blue {
+  box-shadow: 0 4px 20px -2px rgba(30, 58, 138, 0.03);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
