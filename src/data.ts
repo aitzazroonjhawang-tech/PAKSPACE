@@ -55,13 +55,46 @@ export const SEED_SCHOLARSHIPS: Scholarship[] = [
   }
 ];
 
-// NOTE: All demo/placeholder accounts, spaces, posts, comments, and
-// notifications that were previously seeded for prototyping have been
-// permanently removed. The platform now starts completely empty so that
-// only real user registrations and content populate it.
 export const SEED_USERS: User[] = [];
 
-export const SEED_SPACES: Space[] = [];
+export const SEED_SPACES: Space[] = [
+  {
+    id: 'space-1',
+    name: 'HEC Scholarships Support',
+    slug: 'hec-scholarships',
+    description: 'Community space for sharing guidelines on Local Need-Based, Overseas, and Indigenous scholarships offered by HEC.',
+    bannerUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
+    logoUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=150&auto=format&fit=crop&q=80',
+    members: [],
+    moderators: [],
+    postsCount: 0,
+    createdAt: '2026-01-11'
+  },
+  {
+    id: 'space-2',
+    name: 'GCU Ravians Circle',
+    slug: 'gcu-ravians',
+    description: 'A quiet place for GCU Lahore students to talk literature, share historical archives, host debates, and coordinate events.',
+    bannerUrl: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80',
+    logoUrl: 'https://images.unsplash.com/photo-1562774053-701939374585?w=150&auto=format&fit=crop&q=80',
+    members: [],
+    moderators: [],
+    postsCount: 0,
+    createdAt: '2026-02-16'
+  },
+  {
+    id: 'space-3',
+    name: 'FAST Hostel Hacks',
+    slug: 'fast-hostel-hacks',
+    description: 'Hostel item trades, mini electronics, mess reviews, study materials, and late-night coding session coordinates in FAST Islamabad.',
+    bannerUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&auto=format&fit=crop&q=80',
+    logoUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=150&auto=format&fit=crop&q=80',
+    members: [],
+    moderators: [],
+    postsCount: 0,
+    createdAt: '2026-03-02'
+  }
+];
 
 export const SEED_POSTS: Post[] = [];
 

@@ -31,8 +31,8 @@ interface AppContextType {
   triggerToast: (msg: string) => void;
   
   // Auth actions
-  signUp: (name: string, username: string, email: string, password?: string) => void;
-  signIn: (email: string, password?: string) => boolean;
+  signUp: (name: string, username: string, email: string) => void;
+  signIn: (email: string) => boolean;
   finishOnboarding: (profileData: Partial<User>) => void;
   signOut: () => void;
   updateProfile: (profileData: Partial<User>) => void;
@@ -73,11 +73,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   // Load state from localStorage or seed
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // v3: wipe every demo/seed account, post, comment, space, notification and
-    // product that shipped in earlier builds so the live platform starts on a
-    // completely clean slate for real user registrations. This runs once per
-    // browser and also resets the theme default to light.
-    if (!localStorage.getItem('pakspace_v3_initialized')) {
+    // Clear old storage once for v3 fresh slate clean platform experience
+    if (!localStorage.getItem('pakspace_v3_fresh_slate')) {
       localStorage.removeItem('pakspace_users');
       localStorage.removeItem('pakspace_current_user');
       localStorage.removeItem('pakspace_posts');
@@ -85,13 +82,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('pakspace_spaces');
       localStorage.removeItem('pakspace_notifications');
       localStorage.removeItem('pakspace_products');
-      localStorage.removeItem('pakspace_chat_threads');
       localStorage.removeItem('pakspace_chat_messages');
-      localStorage.removeItem('pakspace_dark');
-      localStorage.setItem('pakspace_v3_initialized', 'true');
+      localStorage.removeItem('pakspace_chat_threads');
+      localStorage.setItem('pakspace_v3_fresh_slate', 'true');
     }
     const saved = localStorage.getItem('pakspace_dark');
-    // Default theme is now the solid-yellow light mode.
     return saved ? saved === 'true' : false;
   });
 
@@ -211,38 +206,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [chatMessages]);
 
   // Auth Operations
-  const getStoredPasswords = (): Record<string, string> => {
-    const saved = localStorage.getItem('pakspace_user_passwords');
-    return saved ? JSON.parse(saved) : {};
-  };
-
-  const saveStoredPassword = (email: string, password?: string) => {
-    if (!password) return;
-    const passwords = getStoredPasswords();
-    passwords[email.toLowerCase().trim()] = password;
-    localStorage.setItem('pakspace_user_passwords', JSON.stringify(passwords));
-  };
-
-  const signUp = (name: string, username: string, email: string, password?: string) => {
-    const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
-    const normalizedEmail = email.toLowerCase().trim();
-    
+  const signUp = (name: string, username: string, email: string) => {
     // Check if user already exists
-    const existingEmail = users.find(u => u.email.toLowerCase() === normalizedEmail);
-    if (existingEmail) {
-      throw new Error('An account with this email address already exists.');
-    }
-
-    const existingUsername = users.find(u => u.username === normalizedUsername);
-    if (existingUsername) {
-      throw new Error('This username is already taken. Please choose another.');
+    const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    const existing = users.find(u => u.username === normalizedUsername || u.email === email);
+    
+    if (existing) {
+      setCurrentUser(existing);
+      if (!existing.universityStatus) {
+        setView('onboarding');
+      } else {
+        setView('app');
+        setAppTab('home');
+      }
+      return;
     }
 
     const newUser: User = {
       id: `user-${Date.now()}`,
       name,
       username: normalizedUsername,
-      email: normalizedEmail,
+      email,
       bio: '',
       avatarUrl: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
       coverUrl: `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80`,
@@ -256,33 +240,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       joinedAt: new Date().toISOString().split('T')[0]
     };
 
-    if (password) {
-      saveStoredPassword(normalizedEmail, password);
-    }
-
     setUsers(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
     setView('onboarding');
   };
 
-  const signIn = (email: string, password?: string): boolean => {
-    const normalizedEmail = email.toLowerCase().trim();
-    const existing = users.find(u => u.email.toLowerCase() === normalizedEmail);
-    
+  const signIn = (email: string): boolean => {
+    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) {
-      const passwords = getStoredPasswords();
-      const storedPassword = passwords[normalizedEmail];
-      
-      // If there is a password stored, verify it.
-      if (storedPassword) {
-        if (storedPassword !== password) {
-          throw new Error('Incorrect password. Please try again.');
-        }
-      } else if (password) {
-        // If there's no password stored yet (e.g. legacy/seed user), set it on first login.
-        saveStoredPassword(normalizedEmail, password);
-      }
-      
       setCurrentUser(existing);
       if (!existing.universityStatus) {
         setView('onboarding');
@@ -292,8 +257,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true;
     }
-    
-    throw new Error('No account found with this email. Please sign up first.');
+    // If not found, let's create a generic account so the user has frictionless experience
+    const mockName = email.split('@')[0];
+    const cleanName = mockName.charAt(0).toUpperCase() + mockName.slice(1);
+    signUp(cleanName, mockName, email);
+    return true;
   };
 
   const finishOnboarding = (profileData: Partial<User>) => {

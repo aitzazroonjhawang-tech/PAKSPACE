@@ -11,7 +11,7 @@ import {
   Heart, MessageSquare, Bookmark, Share2, Globe, Instagram, Linkedin,
   LogOut, Moon, Sun, ArrowLeft, Check, Compass as CompassIcon, 
   MapPin, GraduationCap, X, Calendar, ArrowRight, ExternalLink, Key, Sparkles,
-  ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings
+  ShoppingBag, Lock, Unlock, EyeOff, UserCheck
 } from 'lucide-react';
 import { Post, Space, User, Scholarship, University, Comment } from '../types';
 import PakSpaceLogo from './Logo';
@@ -48,7 +48,6 @@ export default function MainApp() {
   const [isCreateSpaceOpen, setIsCreateSpaceOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // Create post states
   const [newPostContent, setNewPostContent] = useState('');
@@ -238,10 +237,10 @@ export default function MainApp() {
   ];
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] transition-colors duration-300 pb-20 md:pb-0 flex selection:bg-[var(--brand-blue)]/30 selection:text-blue-200 font-sans">
+    <div id="app-root-container" className="min-h-screen bg-[#080E21] text-[#E5E5E0] transition-colors duration-300 pb-20 md:pb-0 flex selection:bg-[#047857]/30 selection:text-emerald-200 font-sans">
       
       {/* DESKTOP SIDEBAR NAVIGATION */}
-      <aside className="hidden md:flex flex-col justify-between w-64 border-r border-[var(--border-color)] bg-[var(--bg-app)] p-6 h-screen sticky top-0 shrink-0 z-40 select-none backdrop-blur-md">
+      <aside className="hidden md:flex flex-col justify-between w-64 border-r border-[#1E293B] bg-[#080E21] p-6 h-screen sticky top-0 shrink-0 z-40 select-none backdrop-blur-md">
         <div className="space-y-8">
           <div 
             onClick={() => {
@@ -273,16 +272,16 @@ export default function MainApp() {
                   }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
                     isActive 
-                      ? 'bg-[var(--brand-blue)]/15 text-blue-450 border-l-2 border-[var(--brand-blue)]' 
-                      : 'text-gray-400 hover:bg-white/[0.03] hover:text-[var(--text-secondary)]'
+                      ? 'bg-[#004D34]/15 text-emerald-450 border-l-2 border-[#047857]' 
+                      : 'text-gray-400 hover:bg-white/[0.03] hover:text-[#E5E5E0]'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-blue-450' : 'text-gray-500'}`} />
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-450' : 'text-gray-500'}`} />
                     <span>{item.label}</span>
                   </div>
                   {item.badge ? (
-                    <span className="bg-[var(--brand-blue)] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full shadow-md">
+                    <span className="bg-[#004D34] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full shadow-md">
                       {item.badge}
                     </span>
                   ) : null}
@@ -294,7 +293,7 @@ export default function MainApp() {
           <button
             id="desktop-create-post-btn"
             onClick={() => setIsCreatePostOpen(true)}
-            className="w-full py-3.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-semibold rounded-xl shadow-lg transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer transform active:scale-98"
+            className="w-full py-3.5 bg-[#004D34] hover:bg-[#003c28] border border-[#1E293B] text-white font-semibold rounded-xl shadow-lg transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer transform active:scale-98"
           >
             <Plus className="w-4.5 h-4.5" />
             Create Post
@@ -323,12 +322,11 @@ export default function MainApp() {
             </div>
 
             <button
-              id="sidebar-settings-btn"
-              onClick={() => setIsSettingsOpen(true)}
-              title="Settings"
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-[var(--brand-blue)] transition-all cursor-pointer"
+              id="sidebar-dark-mode-toggle"
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all cursor-pointer"
             >
-              <Settings className="w-4.5 h-4.5" />
+              {darkMode ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
           </div>
 
@@ -354,7 +352,7 @@ export default function MainApp() {
       </aside>
 
       {/* MOBILE HEADER */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--border-color)] bg-[var(--bg-app)] sticky top-0 z-40 w-full select-none">
+      <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[#1E293B] bg-[#080E21] sticky top-0 z-40 w-full select-none">
         <span 
           onClick={() => {
             setAppTab('home');
@@ -369,12 +367,11 @@ export default function MainApp() {
 
         <div className="flex items-center space-x-3">
           <button
-            id="mobile-settings-btn"
-            onClick={() => setIsSettingsOpen(true)}
-            title="Settings"
+            id="mobile-dark-mode-toggle"
+            onClick={() => setDarkMode(!darkMode)}
             className="p-1.5 rounded-lg text-gray-400"
           >
-            <Settings className="w-5 h-5" />
+            {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
           </button>
           
           <img 
@@ -393,7 +390,7 @@ export default function MainApp() {
       </header>
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--border-color)] bg-[var(--bg-app)] flex justify-around items-center py-2 z-40 select-none">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[#1E293B] bg-[#080E21] flex justify-around items-center py-2 z-40 select-none">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = appTab === item.id && !activeSpaceId && !activeUserId;
@@ -411,12 +408,12 @@ export default function MainApp() {
               }}
               className="flex flex-col items-center p-2 relative cursor-pointer animate-fade-in"
             >
-              <Icon className={`w-5.5 h-5.5 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-blue-450 font-bold' : 'text-gray-400'}`}>
+              <Icon className={`w-5.5 h-5.5 ${isActive ? 'text-emerald-400' : 'text-gray-400'}`} />
+              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-emerald-450 font-bold' : 'text-gray-400'}`}>
                 {item.label}
               </span>
               {item.badge ? (
-                <span className="absolute top-1 right-2 bg-[var(--brand-blue)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full scale-90 shadow-md">
+                <span className="absolute top-1 right-2 bg-[#004D34] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full scale-90 shadow-md">
                   {item.badge}
                 </span>
               ) : null}
@@ -430,7 +427,7 @@ export default function MainApp() {
         <button
           id="mobile-floating-create-btn"
           onClick={() => setIsCreatePostOpen(true)}
-          className="w-12 h-12 rounded-full bg-[var(--brand-blue)] text-white shadow-lg shadow-blue-950/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+          className="w-12 h-12 rounded-full bg-[#004D34] text-white shadow-lg shadow-emerald-950/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -534,16 +531,16 @@ export default function MainApp() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4"
+              className="w-full max-w-lg bg-[#0c1020]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
-                  <Plus className="w-4.5 h-4.5 text-blue-400" />
+                <h3 className="text-base font-bold text-white flex items-center gap-1.5 font-display">
+                  <Plus className="w-4.5 h-4.5 text-emerald-400" />
                   Compose Post
                 </h3>
                 <button
                   onClick={() => setIsCreatePostOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
+                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -559,7 +556,7 @@ export default function MainApp() {
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize border transition-all cursor-pointer ${
                         newPostType === type
                           ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-[var(--text-primary)]'
+                          : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       {type}
@@ -572,11 +569,11 @@ export default function MainApp() {
                   <select
                     value={newPostSpaceId}
                     onChange={(e) => setNewPostSpaceId(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                   >
                     <option value="">No Space (General Feed)</option>
                     {spaces.map(s => (
-                      <option key={s.id} value={s.id} className="bg-[var(--bg-surface-2)]">{s.name}</option>
+                      <option key={s.id} value={s.id} className="bg-[#0c1020]">{s.name}</option>
                     ))}
                   </select>
                 </div>
@@ -591,7 +588,7 @@ export default function MainApp() {
                   rows={4}
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
-                  className="w-full px-4 py-3 border border-white/[0.06] rounded-xl bg-white/[0.02] focus:outline-none focus:border-blue-500 text-sm resize-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
+                  className="w-full px-4 py-3 border border-white/[0.06] rounded-xl bg-white/[0.02] focus:outline-none focus:border-blue-500 text-sm resize-none text-white focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
                 />
 
                 {newPostType === 'photo' && (
@@ -611,7 +608,7 @@ export default function MainApp() {
                             reader.readAsDataURL(file);
                           }
                         }}
-                        className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
+                        className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer"
                       />
                       {newPostImageUrl && (
                         <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/[0.08] bg-white/5">
@@ -638,7 +635,7 @@ export default function MainApp() {
                         placeholder="https://hec.gov.pk/..."
                         value={newPostLinkUrl}
                         onChange={(e) => setNewPostLinkUrl(e.target.value)}
-                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-white focus:bg-white/[0.04] transition-all"
                       />
                     </div>
                     <div className="space-y-1">
@@ -648,18 +645,18 @@ export default function MainApp() {
                         placeholder="HEC Portal Guide"
                         value={newPostLinkTitle}
                         onChange={(e) => setNewPostLinkTitle(e.target.value)}
-                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-white focus:bg-white/[0.04] transition-all"
                       />
                     </div>
                   </div>
                 )}
 
                 {/* ANONYMOUS TOGGLE OPTION */}
-                <div className="flex items-center justify-between p-3.5 bg-[var(--bg-app)]/40 border border-[var(--border-color)] rounded-xl select-none text-left">
+                <div className="flex items-center justify-between p-3.5 bg-[#080E21]/40 border border-[#1E293B] rounded-xl select-none text-left">
                   <div className="flex items-center gap-2">
-                    <EyeOff className="w-4 h-4 text-blue-400 shrink-0" />
+                    <EyeOff className="w-4 h-4 text-emerald-400 shrink-0" />
                     <div>
-                      <span className="text-xs font-bold text-[var(--text-secondary)] block">Post Anonymously</span>
+                      <span className="text-xs font-bold text-[#E5E5E0] block">Post Anonymously</span>
                       <span className="text-[10px] text-gray-500 block">Hide your name, degree, and university details.</span>
                     </div>
                   </div>
@@ -667,7 +664,7 @@ export default function MainApp() {
                     type="button"
                     onClick={() => setPostAnonymously(!postAnonymously)}
                     className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer relative flex items-center ${
-                      postAnonymously ? 'bg-[var(--brand-blue)]' : 'bg-[var(--border-color)]'
+                      postAnonymously ? 'bg-[#047857]' : 'bg-[#1E293B]'
                     }`}
                   >
                     <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
@@ -679,7 +676,7 @@ export default function MainApp() {
                 <button
                   id="submit-post-btn"
                   type="submit"
-                  className="w-full py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-semibold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
+                  className="w-full py-3 bg-[#004D34] hover:bg-[#003c28] border border-[#1E293B] text-white font-semibold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
                 >
                   Publish Post
                 </button>
@@ -697,16 +694,16 @@ export default function MainApp() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4"
+              className="w-full max-w-md bg-[#0c1020]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+                <h3 className="text-base font-bold text-white flex items-center gap-1.5 font-display">
                   <Users className="w-5 h-5 text-blue-500" />
                   Launch a Space
                 </h3>
                 <button
                   onClick={() => setIsCreateSpaceOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
+                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -721,7 +718,7 @@ export default function MainApp() {
                     placeholder="e.g. LUMS MBA 2026 or CSS Aspirants"
                     value={newSpaceName}
                     onChange={(e) => setNewSpaceName(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                    className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                   />
                 </div>
 
@@ -733,7 +730,7 @@ export default function MainApp() {
                     rows={3}
                     value={newSpaceDescription}
                     onChange={(e) => setNewSpaceDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 resize-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 resize-none text-white focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
                   />
                 </div>
 
@@ -744,7 +741,7 @@ export default function MainApp() {
                     placeholder="https://images.unsplash.com/..."
                     value={newSpaceBanner}
                     onChange={(e) => setNewSpaceBanner(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                    className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                   />
                 </div>
 
@@ -769,16 +766,16 @@ export default function MainApp() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4 my-8 animate-fade-in"
+              className="w-full max-w-lg bg-[#0c1020]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4 my-8 animate-fade-in"
             >
               <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+                <h3 className="text-base font-bold text-white flex items-center gap-1.5 font-display">
                   <UserIcon className="w-5 h-5 text-blue-500" />
                   Edit Profile
                 </h3>
                 <button
                   onClick={() => setIsEditProfileOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
+                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -793,7 +790,7 @@ export default function MainApp() {
                       required
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-emerald-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -811,7 +808,7 @@ export default function MainApp() {
                           reader.readAsDataURL(file);
                         }
                       }}
-                      className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
+                      className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer"
                     />
                   </div>
                 </div>
@@ -832,7 +829,7 @@ export default function MainApp() {
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
+                    className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer"
                   />
                 </div>
 
@@ -842,7 +839,7 @@ export default function MainApp() {
                     value={editBio}
                     onChange={(e) => setEditBio(e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 resize-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 resize-none text-white focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
                   />
                 </div>
 
@@ -852,16 +849,16 @@ export default function MainApp() {
                     <select
                       value={editStatus}
                       onChange={(e: any) => setEditStatus(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     >
-                      <option value="Student" className="bg-[var(--bg-surface-2)]">Student</option>
-                      <option value="Creator" className="bg-[var(--bg-surface-2)]">Creator</option>
-                      <option value="Community" className="bg-[var(--bg-surface-2)]">Community</option>
-                      <option value="Organization" className="bg-[var(--bg-surface-2)]">Organization</option>
-                      <option value="Current Student" className="bg-[var(--bg-surface-2)]">Current Student</option>
-                      <option value="Applying Soon" className="bg-[var(--bg-surface-2)]">Applying Soon</option>
-                      <option value="Graduate" className="bg-[var(--bg-surface-2)]">Graduate</option>
-                      <option value="Not in University" className="bg-[var(--bg-surface-2)]">Not in University</option>
+                      <option value="Student" className="bg-[#0c1020]">Student</option>
+                      <option value="Creator" className="bg-[#0c1020]">Creator</option>
+                      <option value="Community" className="bg-[#0c1020]">Community</option>
+                      <option value="Organization" className="bg-[#0c1020]">Organization</option>
+                      <option value="Current Student" className="bg-[#0c1020]">Current Student</option>
+                      <option value="Applying Soon" className="bg-[#0c1020]">Applying Soon</option>
+                      <option value="Graduate" className="bg-[#0c1020]">Graduate</option>
+                      <option value="Not in University" className="bg-[#0c1020]">Not in University</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -870,7 +867,7 @@ export default function MainApp() {
                       type="text"
                       value={editCity}
                       onChange={(e) => setEditCity(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                   </div>
                 </div>
@@ -882,7 +879,7 @@ export default function MainApp() {
                       type="text"
                       value={editUniversityName}
                       onChange={(e) => setEditUniversityName(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -891,7 +888,7 @@ export default function MainApp() {
                       type="text"
                       value={editDegree}
                       onChange={(e) => setEditDegree(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                   </div>
                 </div>
@@ -905,21 +902,21 @@ export default function MainApp() {
                       placeholder="Personal Website URL"
                       value={editWebsite}
                       onChange={(e) => setEditWebsite(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                     <input
                       type="text"
                       placeholder="Instagram Username"
                       value={editInstagram}
                       onChange={(e) => setEditInstagram(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                     <input
                       type="text"
                       placeholder="LinkedIn Profile Name"
                       value={editLinkedin}
                       onChange={(e) => setEditLinkedin(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-white focus:bg-white/[0.04] transition-all"
                     />
                   </div>
                 </div>
@@ -945,16 +942,16 @@ export default function MainApp() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4 text-left"
+              className="w-full max-w-sm bg-[#0c1020]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4 text-left"
             >
               <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+                <h3 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                   <Key className="w-4.5 h-4.5 text-blue-500" />
                   Keyboard Shortcuts
                 </h3>
                 <button
                   onClick={() => setIsShortcutsOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
+                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
                 >
                   <X className="w-4.5 h-4.5" />
                 </button>
@@ -995,88 +992,6 @@ export default function MainApp() {
         )}
       </AnimatePresence>
 
-      {/* E. SETTINGS DIALOG */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-5 text-left"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
-                  <Settings className="w-4.5 h-4.5 text-blue-500" />
-                  Settings
-                </h3>
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
-                >
-                  <X className="w-4.5 h-4.5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4 py-1">
-                  <div className="flex items-start gap-2.5">
-                    {darkMode ? (
-                      <Moon className="w-4.5 h-4.5 text-blue-400 mt-0.5 shrink-0" />
-                    ) : (
-                      <Sun className="w-4.5 h-4.5 text-amber-400 mt-0.5 shrink-0" />
-                    )}
-                    <div>
-                      <p className="text-xs font-bold text-[var(--text-primary)]">Dark Mode</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">Switch the entire interface between the solid-yellow light theme and dark mode.</p>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-dark-mode-toggle"
-                    role="switch"
-                    aria-checked={darkMode}
-                    aria-label="Toggle dark mode"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="theme-switch"
-                    data-on={darkMode}
-                  >
-                    <span className="theme-switch-knob" />
-                  </button>
-                </div>
-
-                <div className="pt-3 border-t border-white/[0.06]">
-                  <button
-                    onClick={() => {
-                      setIsSettingsOpen(false);
-                      setIsEditProfileOpen(true);
-                    }}
-                    className="w-full text-left text-xs font-semibold text-gray-400 hover:text-[var(--text-primary)] py-2 transition-colors cursor-pointer"
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsSettingsOpen(false);
-                      setIsShortcutsOpen(true);
-                    }}
-                    className="w-full text-left text-xs font-semibold text-gray-400 hover:text-[var(--text-primary)] py-2 transition-colors cursor-pointer"
-                  >
-                    Keyboard Shortcuts
-                  </button>
-                  <button
-                    id="settings-signout-btn"
-                    onClick={signOut}
-                    className="w-full text-left text-xs font-bold text-red-400 hover:text-red-500 py-2 transition-colors cursor-pointer"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
@@ -1093,7 +1008,7 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
     <div className="space-y-6 animate-fade-in font-sans">
       <div 
         onClick={onCreateClick}
-        className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[var(--brand-blue)]/30 hover:bg-white/[0.04] transition-all select-none"
+        className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[#10B981]/30 hover:bg-white/[0.04] transition-all select-none"
       >
         <img 
           src={currentUser?.avatarUrl} 
@@ -1112,14 +1027,14 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
               <CompassIcon className="w-5 h-5 text-blue-400" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-[var(--text-primary)] tracking-tight font-display">Your space is waiting.</h3>
+              <h3 className="text-base font-bold text-white tracking-tight font-display">Your space is waiting.</h3>
               <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
                 Follow communities and start sharing ideas. Express yourself, find peers, or ask academic questions.
               </p>
             </div>
             <button
               onClick={onCreateClick}
-              className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-[var(--brand-blue)]/10 inline-flex items-center gap-1.5"
+              className="px-6 py-3 bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-[#10B981]/10 inline-flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Compose Your First Post
@@ -1173,7 +1088,7 @@ function ExploreView() {
   return (
     <div className="space-y-8 animate-fade-in text-left">
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Explore Opportunities</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-white font-display">Explore Opportunities</h2>
         <div className="relative">
           <input
             id="global-search-input"
@@ -1181,13 +1096,13 @@ function ExploreView() {
             placeholder="Search people, posts, spaces, scholarships, universities..."
             value={exploreSearch}
             onChange={(e) => setExploreSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3.5 bg-white/[0.02] border border-white/[0.06] rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:bg-white/[0.04] text-[var(--text-primary)] transition-all shadow-lg shadow-black/10"
+            className="w-full pl-11 pr-4 py-3.5 bg-white/[0.02] border border-white/[0.06] rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:bg-white/[0.04] text-white transition-all shadow-lg shadow-black/10"
           />
           <Search className="absolute left-4 top-4 w-4.5 h-4.5 text-gray-500" />
           {isSearching && (
             <button
               onClick={() => setExploreSearch('')}
-              className="absolute right-4 top-3.5 p-1 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-[var(--text-primary)] cursor-pointer transition-all"
+              className="absolute right-4 top-3.5 p-1 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer transition-all"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -1201,7 +1116,7 @@ function ExploreView() {
 
           {filteredSpaces.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                 <Users className="w-4 h-4 text-blue-500" />
                 Spaces ({filteredSpaces.length})
               </h4>
@@ -1214,7 +1129,7 @@ function ExploreView() {
                   >
                     <img src={space.logoUrl} alt={space.name} className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" referrerPolicy="no-referrer" />
                     <div>
-                      <h5 className="text-xs font-bold leading-tight hover:underline text-[var(--text-primary)]">{space.name}</h5>
+                      <h5 className="text-xs font-bold leading-tight hover:underline text-white">{space.name}</h5>
                       <p className="text-[10px] text-gray-400 mt-0.5">{space.members.length} members</p>
                     </div>
                   </div>
@@ -1225,7 +1140,7 @@ function ExploreView() {
 
           {filteredPeople.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                 <UserIcon className="w-4 h-4 text-blue-500" />
                 Students & Grads ({filteredPeople.length})
               </h4>
@@ -1239,7 +1154,7 @@ function ExploreView() {
                     <div className="flex items-center gap-3">
                       <img src={person.avatarUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                       <div>
-                        <h5 className="text-xs font-bold leading-tight hover:underline text-[var(--text-primary)]">{person.name}</h5>
+                        <h5 className="text-xs font-bold leading-tight hover:underline text-white">{person.name}</h5>
                         <p className="text-[10px] text-gray-400 mt-0.5">@{person.username}</p>
                       </div>
                     </div>
@@ -1252,7 +1167,7 @@ function ExploreView() {
 
           {filteredScholarships.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                 <GraduationCap className="w-4.5 h-4.5 text-blue-500" />
                 Scholarships ({filteredScholarships.length})
               </h4>
@@ -1266,7 +1181,7 @@ function ExploreView() {
 
           {filteredUniversities.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                 <Globe className="w-4 h-4 text-blue-500" />
                 Universities ({filteredUniversities.length})
               </h4>
@@ -1280,7 +1195,7 @@ function ExploreView() {
 
           {filteredPosts.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-display">
                 <MessageSquare className="w-4 h-4 text-blue-500" />
                 Discussions ({filteredPosts.length})
               </h4>
@@ -1308,9 +1223,9 @@ function ExploreView() {
           <div className="absolute inset-0 bg-gradient-to-b from-blue-600/[0.005] to-transparent pointer-events-none" />
           <div className="max-w-md mx-auto space-y-3.5">
             <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center mx-auto text-gray-400">
-              <Search className="w-4.5 h-4.5 text-[var(--brand-blue)]" />
+              <Search className="w-4.5 h-4.5 text-[#10B981]" />
             </div>
-            <h3 className="text-sm font-bold text-[var(--text-primary)] tracking-tight font-display">Search the entire network</h3>
+            <h3 className="text-sm font-bold text-white tracking-tight font-display">Search the entire network</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
               Find and follow developers, designers, writers, and students. Join degree-specific spaces and explore peer conversations across Pakistan.
             </p>
@@ -1370,7 +1285,7 @@ function MessagesInboxView() {
   return (
     <div className="space-y-6 animate-fade-in font-sans text-left">
       <div>
-        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Direct Messages</h2>
+        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white font-display">Direct Messages</h2>
         <p className="text-xs text-gray-450 mt-0.5">Connect and coordinate directly with peers and creators across Pakistan.</p>
       </div>
 
@@ -1396,7 +1311,7 @@ function MessagesInboxView() {
                   >
                     <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full object-cover border border-white/5" />
                     <div className="overflow-hidden">
-                      <h4 className="text-xs font-bold text-[var(--text-primary)] truncate leading-none">{u.name}</h4>
+                      <h4 className="text-xs font-bold text-white truncate leading-none">{u.name}</h4>
                       <p className="text-[10px] text-gray-400 mt-1 truncate">@{u.username}</p>
                     </div>
                   </button>
@@ -1414,8 +1329,8 @@ function MessagesInboxView() {
               <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 mb-3">
                 <img src={activeChatUser.avatarUrl} alt={activeChatUser.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                 <div>
-                  <h4 className="text-xs font-bold text-[var(--text-primary)] leading-none">{activeChatUser.name}</h4>
-                  <p className="text-[9px] text-[var(--brand-blue)] mt-0.5">Online</p>
+                  <h4 className="text-xs font-bold text-white leading-none">{activeChatUser.name}</h4>
+                  <p className="text-[9px] text-[#10B981] mt-0.5">Online</p>
                 </div>
               </div>
 
@@ -1457,7 +1372,7 @@ function MessagesInboxView() {
                   placeholder={`Write a message to @${activeChatUser.username}...`}
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white/[0.02] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  className="w-full px-4 py-2.5 bg-white/[0.02] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white"
                 />
                 <button
                   type="submit"
@@ -1470,10 +1385,10 @@ function MessagesInboxView() {
           ) : (
             <div className="flex flex-col items-center justify-center flex-grow py-12 px-6 text-center space-y-4">
               <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-gray-400">
-                <MessageSquare className="w-5 h-5 text-[var(--brand-blue)]" />
+                <MessageSquare className="w-5 h-5 text-[#10B981]" />
               </div>
               <div className="space-y-1.5">
-                <h4 className="text-sm font-bold text-[var(--text-primary)] tracking-tight">Direct Messaging</h4>
+                <h4 className="text-sm font-bold text-white tracking-tight">Direct Messaging</h4>
                 <p className="text-[11px] text-gray-400 max-w-xs leading-relaxed">
                   Start a conversation with developers, writers, and builders across Pakistan. Select any user on the left pane to connect!
                 </p>
@@ -1496,7 +1411,7 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
     <div className="space-y-6 animate-fade-in text-left">
       <div className="flex justify-between items-center select-none">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">University Spaces</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-white font-display">University Spaces</h2>
           <p className="text-xs text-gray-400 mt-0.5">Explore degree groups, campus clubs, and admissions guides</p>
         </div>
         
@@ -1517,7 +1432,7 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
             <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-2 animate-pulse">
               <Users className="w-6 h-6 text-blue-500" />
             </div>
-            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">No Spaces Launched Yet</h3>
+            <h3 className="text-lg font-bold text-white tracking-tight">No Spaces Launched Yet</h3>
             <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
               Be the first to launch a space for your university, department, or special interest! Let's connect students.
             </p>
@@ -1538,11 +1453,11 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
               >
                 <div 
                   onClick={() => setActiveSpaceId(space.id)}
-                  className="h-28 bg-[var(--bg-surface-2)] relative cursor-pointer group"
+                  className="h-28 bg-[#0c1020] relative cursor-pointer group"
                 >
                   <img src={space.bannerUrl} alt={space.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
                   <div className="absolute bottom-3 left-4 flex items-center space-x-2">
-                    <img src={space.logoUrl} alt={space.name} className="w-10 h-10 rounded-xl object-cover border-2 border-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
+                    <img src={space.logoUrl} alt={space.name} className="w-10 h-10 rounded-xl object-cover border-2 border-[#090d1a]" referrerPolicy="no-referrer" />
                   </div>
                 </div>
 
@@ -1550,7 +1465,7 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
                   <div className="space-y-1.5 text-left">
                     <h3 
                       onClick={() => setActiveSpaceId(space.id)}
-                      className="font-bold text-[var(--text-primary)] hover:underline cursor-pointer tracking-tight"
+                      className="font-bold text-white hover:underline cursor-pointer tracking-tight"
                     >
                       {space.name}
                     </h3>
@@ -1626,7 +1541,7 @@ function NotificationsView() {
   return (
     <div className="space-y-6 animate-fade-in text-left">
       <div className="flex justify-between items-center select-none">
-        <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Notifications</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-white font-display">Notifications</h2>
         {userNotifs.length > 0 && (
           <button
             onClick={markAllNotificationsAsRead}
@@ -1668,7 +1583,7 @@ function NotificationsView() {
                   <img src={sender.avatarUrl} alt={sender.name} className="w-10 h-10 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                   <div className="text-left text-xs">
                     <p className="text-gray-200">
-                      <span className="font-bold text-[var(--text-primary)] hover:underline">{sender.name}</span>{' '}
+                      <span className="font-bold text-white hover:underline">{sender.name}</span>{' '}
                       {notif.type === 'like' && 'liked your post'}
                       {notif.type === 'comment' && 'commented on your post'}
                       {notif.type === 'follow' && 'started following you'}
@@ -1717,7 +1632,7 @@ function UniversityCard({ university }: { university: University; key?: any }) {
         referrerPolicy="no-referrer"
       />
       <div className="text-left space-y-1 min-w-0">
-        <h4 className="text-xs font-bold text-[var(--text-primary)] truncate tracking-tight">{university.name}</h4>
+        <h4 className="text-xs font-bold text-white truncate tracking-tight">{university.name}</h4>
         <p className="text-[10px] text-gray-400 flex items-center gap-1">
           <MapPin className="w-3.5 h-3.5 text-gray-500" />
           {university.city}
@@ -1752,7 +1667,7 @@ function ScholarshipCard({ scholarship }: { scholarship: Scholarship; key?: any 
           <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
             {scholarship.category}
           </span>
-          <h4 className="text-sm font-bold text-[var(--text-primary)] tracking-tight pt-1 font-display">{scholarship.title}</h4>
+          <h4 className="text-sm font-bold text-white tracking-tight pt-1 font-display">{scholarship.title}</h4>
           <p className="text-[10px] text-gray-400 leading-none mt-0.5">Offered by {scholarship.provider}</p>
         </div>
         
@@ -1850,7 +1765,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
   };
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-5 md:p-6 text-left space-y-4 shadow-xl hover:border-[var(--brand-blue)]/20 transition-all duration-200">
+    <div className="bg-[#111827] border border-[#1E293B] rounded-3xl p-5 md:p-6 text-left space-y-4 shadow-xl hover:border-[#047857]/20 transition-all duration-200">
       <div className="flex justify-between items-center select-none">
         <div className="flex items-center space-x-3">
           <img 
@@ -1872,7 +1787,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
                   setActiveUserId(postAuthor.id);
                   if (onBack) onBack();
                 }}
-                className={`text-xs font-bold text-[var(--text-secondary)] tracking-tight ${post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                className={`text-xs font-bold text-[#E5E5E0] tracking-tight ${post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
               >
                 {post.isAnonymous ? (post.anonymousName || 'Anonymous Student') : postAuthor.name}
               </span>
@@ -1900,7 +1815,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
                 setActiveSpaceId(post.spaceId!);
                 if (onBack) onBack();
               }}
-              className="text-[9px] bg-[var(--brand-blue)]/20 text-blue-400 font-bold px-2 py-1 rounded-lg hover:underline cursor-pointer"
+              className="text-[9px] bg-[#004D34]/20 text-emerald-400 font-bold px-2 py-1 rounded-lg hover:underline cursor-pointer"
             >
               in {spaces.find(s => s.id === post.spaceId)?.name || 'Space'}
             </span>
@@ -1912,7 +1827,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
               className={`text-[10px] font-bold hover:underline bg-transparent border-none cursor-pointer ${
                 currentUser.interests.includes(`following-${postAuthor.id}`)
                   ? 'text-gray-400'
-                  : 'text-blue-400'
+                  : 'text-emerald-400'
               }`}
             >
               {currentUser.interests.includes(`following-${postAuthor.id}`) ? 'Following' : 'Follow'}
@@ -1939,7 +1854,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
           >
             <div className="flex justify-between items-center text-xs">
               <div className="min-w-0 text-left">
-                <p className="font-bold text-[var(--text-primary)] truncate">{post.linkTitle || 'External Resource'}</p>
+                <p className="font-bold text-white truncate">{post.linkTitle || 'External Resource'}</p>
                 <p className="text-[10px] text-gray-500 mt-0.5 truncate">{post.linkUrl}</p>
               </div>
               <ExternalLink className="w-4 h-4 text-gray-500 shrink-0 ml-2" />
@@ -2014,10 +1929,10 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
                       className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/10" 
                       referrerPolicy="no-referrer" 
                     />
-                    <div className="bg-[var(--bg-app)]/30 border border-[var(--border-color)] p-2.5 rounded-xl text-left flex-grow space-y-1">
+                    <div className="bg-[#080E21]/30 border border-[#1E293B] p-2.5 rounded-xl text-left flex-grow space-y-1">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-[var(--text-secondary)]">{displayCommentName}</span>
+                          <span className="font-bold text-[#E5E5E0]">{displayCommentName}</span>
                           {comment.isAnonymous && (
                             <span className="text-[8px] bg-red-950/20 text-red-400 border border-red-900/30 font-mono px-1 rounded">🔒 ANON</span>
                           )}
@@ -2039,12 +1954,12 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
                 placeholder="Write a reply..."
                 value={quickCommentText}
                 onChange={(e) => setQuickCommentText(e.target.value)}
-                className="flex-grow px-3 py-2 border border-[var(--border-color)] bg-[var(--bg-app)]/50 rounded-xl text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                className="flex-grow px-3 py-2 border border-[#1E293B] bg-[#080E21]/50 rounded-xl text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
               />
               <button
                 type="submit"
                 disabled={!quickCommentText.trim()}
-                className="px-4 py-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl cursor-pointer shrink-0 transition-colors"
+                className="px-4 py-2 bg-[#004D34] hover:bg-[#003c28] disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl cursor-pointer shrink-0 transition-colors"
               >
                 Reply
               </button>
@@ -2057,7 +1972,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono tracking-wide transition-all cursor-pointer ${
                   commentAnonymously 
                     ? 'bg-red-950/20 border-red-900/40 text-red-400' 
-                    : 'bg-white/5 border-[var(--border-color)] text-gray-400 hover:text-[var(--text-secondary)]'
+                    : 'bg-white/5 border-[#1E293B] text-gray-400 hover:text-[#E5E5E0]'
                 }`}
               >
                 {commentAnonymously ? <Lock className="w-3 h-3 shrink-0 text-red-400" /> : <Unlock className="w-3 h-3 shrink-0" />}
@@ -2102,7 +2017,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
     <div className="space-y-6 text-left animate-fade-in">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[var(--text-primary)] mb-2 cursor-pointer transition-colors"
+        className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-white mb-2 cursor-pointer transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Spaces
@@ -2115,12 +2030,12 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
 
         <div className="p-6 relative space-y-4">
           <div className="absolute -top-10 left-6">
-            <img src={space.logoUrl} alt={space.name} className="w-16 h-16 rounded-2xl object-cover border-4 border-[var(--bg-surface-2)] shadow-sm bg-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
+            <img src={space.logoUrl} alt={space.name} className="w-16 h-16 rounded-2xl object-cover border-4 border-[#090d1a] shadow-sm bg-[#090d1a]" referrerPolicy="no-referrer" />
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
-              <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-display">{space.name}</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white font-display">{space.name}</h2>
               <p className="text-xs text-gray-400">{space.members.length} members • Created {formatTime(space.createdAt)}</p>
             </div>
 
@@ -2151,7 +2066,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
             placeholder="Search posts inside space..."
             value={spaceSearchQuery}
             onChange={(e) => setSpaceSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-white/[0.01] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+            className="w-full pl-9 pr-3 py-2 bg-white/[0.01] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white"
           />
           <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500" />
         </div>
@@ -2161,7 +2076,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
         {spacePosts.length === 0 ? (
           <div className="text-center py-12 space-y-2 bg-white/[0.02] border border-white/[0.06] rounded-3xl">
             <MessageSquare className="w-8 h-8 text-gray-500 mx-auto" />
-            <p className="text-sm font-semibold text-[var(--text-primary)]">No posts in this space yet</p>
+            <p className="text-sm font-semibold text-white">No posts in this space yet</p>
             <p className="text-xs text-gray-400">Be the first to share something useful with other members!</p>
           </div>
         ) : (
@@ -2201,7 +2116,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
       {onBack && (
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[var(--text-primary)] mb-2 cursor-pointer transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-white mb-2 cursor-pointer transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -2209,24 +2124,24 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
       )}
 
       <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl overflow-hidden text-left shadow-xl">
-        <div className="h-40 bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-[var(--bg-surface-2)] relative select-none">
+        <div className="h-40 bg-gradient-to-r from-emerald-950/60 via-slate-900/80 to-[#0c1020] relative select-none">
           {user.coverUrl ? (
             <img src={user.coverUrl} alt="Cover" className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/45 to-[var(--bg-surface-2)]/90 flex items-center justify-center">
-              <span className="text-[10px] font-mono tracking-widest text-[var(--brand-blue)] uppercase">PAKSYNC VERIFIED</span>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/45 to-[#0c1020]/90 flex items-center justify-center">
+              <span className="text-[10px] font-mono tracking-widest text-[#047857] uppercase">PAKSYNC VERIFIED</span>
             </div>
           )}
         </div>
 
         <div className="p-6 relative space-y-4">
           <div className="absolute -top-12 left-6">
-            <img src={user.avatarUrl} alt={user.name} className="w-20 h-20 rounded-full object-cover border-4 border-[var(--bg-surface-2)] shadow-md bg-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
+            <img src={user.avatarUrl} alt={user.name} className="w-20 h-20 rounded-full object-cover border-4 border-[#090d1a] shadow-md bg-[#090d1a]" referrerPolicy="no-referrer" />
           </div>
 
           <div className="pt-8 flex justify-between items-start">
             <div className="space-y-1 text-left">
-              <h2 className="text-xl font-bold tracking-tight leading-none text-[var(--text-primary)] font-display">{user.name}</h2>
+              <h2 className="text-xl font-bold tracking-tight leading-none text-white font-display">{user.name}</h2>
               <p className="text-xs text-gray-500 mt-1">@{user.username}</p>
             </div>
 
@@ -2234,7 +2149,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
               {isMe ? (
                 <button
                   onClick={onEditProfileClick}
-                  className="px-4 py-2 border border-white/10 rounded-xl text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer text-[var(--text-primary)]"
+                  className="px-4 py-2 border border-white/10 rounded-xl text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer text-white"
                 >
                   Edit Profile
                 </button>
@@ -2262,7 +2177,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
               <div className="flex items-center gap-2 text-gray-400">
                 <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
                 <span>
-                  <strong className="text-[var(--text-primary)]">{user.universityStatus}</strong> at {user.universityName} ({user.degree})
+                  <strong className="text-white">{user.universityStatus}</strong> at {user.universityName} ({user.degree})
                 </span>
               </div>
             )}
@@ -2270,7 +2185,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
             {user.city && (
               <div className="flex items-center gap-2 text-gray-400">
                 <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>Based in <strong className="text-[var(--text-primary)]">{user.city}</strong></span>
+                <span>Based in <strong className="text-white">{user.city}</strong></span>
               </div>
             )}
           </div>
@@ -2287,8 +2202,8 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
 
           <div className="pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-4 select-none">
             <div className="flex space-x-4 text-xs font-semibold text-gray-400">
-              <span><strong className="text-[var(--text-primary)]">{user.followersCount}</strong> Followers</span>
-              <span><strong className="text-[var(--text-primary)]">{user.followingCount}</strong> Following</span>
+              <span><strong className="text-white">{user.followersCount}</strong> Followers</span>
+              <span><strong className="text-white">{user.followingCount}</strong> Following</span>
             </div>
 
             <div className="flex items-center space-x-3 text-gray-500">
@@ -2318,7 +2233,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
           className={`flex-grow py-3 text-xs font-semibold transition-all border-b-2 cursor-pointer ${
             profileTab === 'posts' 
               ? 'border-blue-500 text-blue-400 font-bold' 
-              : 'border-transparent text-gray-500 hover:text-[var(--text-primary)]'
+              : 'border-transparent text-gray-500 hover:text-white'
           }`}
         >
           Posts ({userPosts.length})
@@ -2330,7 +2245,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
             className={`flex-grow py-3 text-xs font-semibold transition-all border-b-2 cursor-pointer ${
               profileTab === 'saved' 
                 ? 'border-blue-500 text-blue-400 font-bold' 
-                : 'border-transparent text-gray-500 hover:text-[var(--text-primary)]'
+                : 'border-transparent text-gray-500 hover:text-white'
           }`}
           >
             Saved ({savedPosts.length})
@@ -2342,7 +2257,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
           className={`flex-grow py-3 text-xs font-semibold transition-all border-b-2 cursor-pointer ${
             profileTab === 'spaces' 
               ? 'border-blue-500 text-blue-400 font-bold' 
-              : 'border-transparent text-gray-500 hover:text-[var(--text-primary)]'
+              : 'border-transparent text-gray-500 hover:text-white'
           }`}
         >
           Spaces ({joinedSpaces.length})
@@ -2391,7 +2306,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
                 >
                   <img src={space.logoUrl} alt={space.name} className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" referrerPolicy="no-referrer" />
                   <div className="text-left min-w-0">
-                    <h5 className="text-xs font-bold leading-tight truncate hover:underline text-[var(--text-primary)]">{space.name}</h5>
+                    <h5 className="text-xs font-bold leading-tight truncate hover:underline text-white">{space.name}</h5>
                     <p className="text-[10px] text-gray-500 mt-0.5">{space.members.length} members</p>
                   </div>
                 </div>

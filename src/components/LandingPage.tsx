@@ -1,7 +1,12 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { motion } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import PakSpaceLogo from './Logo';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Compass, Sparkles, BookOpen, ShoppingBag, ShieldCheck } from 'lucide-react';
 
 export default function LandingPage() {
   const { setView, setAuthMode } = useApp();
@@ -14,29 +19,26 @@ export default function LandingPage() {
   return (
     <div 
       id="landing-container" 
-      className="min-h-screen bg-[#FACC15] text-[#1F2937] flex flex-col justify-between overflow-x-hidden relative selection:bg-[#3B82F6]/20 font-sans"
+      className="min-h-screen bg-[#080E21] text-[#E5E5E0] flex flex-col justify-between overflow-x-hidden relative selection:bg-blue-500/20 selection:text-blue-300 font-sans"
     >
-      {/* Background grid details */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(31,41,55,0.02)_1.5px,transparent_1.5px),linear-gradient(90deg,rgba(31,41,55,0.02)_1.5px,transparent_1.5px)] bg-[size:30px_30px] opacity-100 pointer-events-none" />
-
       {/* Top Navigation */}
-      <header className="relative w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-10">
+      <header className="relative w-full max-w-5xl mx-auto px-6 py-6 flex justify-between items-center z-10 border-b border-[#1E293B]">
         <div className="flex items-center">
-          <PakSpaceLogo size="sm" showText={true} horizontal={true} textClassName="text-[#1F2937]" />
+          <PakSpaceLogo size="sm" showText={true} horizontal={true} />
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <button
             id="signin-header-btn"
             onClick={() => handleStart('signin')}
-            className="px-5 py-2.5 text-sm font-semibold text-[#1F2937] hover:text-[#3B82F6] transition-all cursor-pointer"
+            className="px-3 py-1.5 text-xs font-mono font-medium text-gray-400 hover:text-white transition-all cursor-pointer"
           >
             Sign In
           </button>
           <button
             id="join-header-btn"
             onClick={() => handleStart('signup')}
-            className="px-6 py-2.5 text-sm font-bold text-white bg-[#3B82F6] hover:bg-[#2563EB] rounded-xl transition-all shadow-lg shadow-blue-500/10 cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+            className="px-4 py-2 text-xs font-mono font-bold text-white bg-[#004D34] hover:bg-[#003322] rounded-lg transition-all cursor-pointer border border-[#004D34]"
           >
             Join PakSpace
           </button>
@@ -44,65 +46,65 @@ export default function LandingPage() {
       </header>
 
       {/* Main Editorial Hero */}
-      <main className="relative flex-grow flex flex-col justify-center items-center w-full max-w-4xl mx-auto px-6 py-12 md:py-20 z-10 text-center space-y-12">
+      <main className="relative flex-grow flex flex-col justify-center items-center w-full max-w-3xl mx-auto px-6 py-16 md:py-24 z-10 text-center space-y-10">
         
         {/* Centered Logo & Brand Identity */}
-        <div className="space-y-8 flex flex-col items-center">
+        <div className="space-y-6 flex flex-col items-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm border border-white/20 shadow-xl"
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="mb-2"
           >
             <PakSpaceLogo size="xl" showText={false} />
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-4 max-w-2xl"
+            transition={{ duration: 0.7 }}
+            className="space-y-4 text-center"
           >
-            <h1 className="text-5xl md:text-8xl font-black tracking-tight text-[#1F2937] leading-none uppercase">
-              PAKSPACE
+            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight text-yellow-400 leading-tight">
+              PakSpace
             </h1>
-            <p className="text-lg md:text-2xl text-[#1F2937]/80 font-medium tracking-tight max-w-xl mx-auto italic font-serif">
-              The premium student space to connect, share, learn, and grow.
+            <p className="text-lg md:text-xl font-serif text-emerald-400 font-medium tracking-tight max-w-xl mx-auto italic">
+              "The student space to connect, share, learn, and grow."
             </p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-xl"
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="max-w-xl pt-3"
           >
-            <p className="text-base md:text-lg text-[#1F2937]/70 leading-relaxed font-medium">
-              Join the official digital campus directory where Pakistani university students share resources, list marketplace items, and collaborate in secure spaces.
+            <p className="text-sm md:text-base text-gray-400 leading-relaxed font-sans">
+              PakSpace is a student-powered platform where university communities share opportunities, discussions, resources, and marketplace items.
             </p>
           </motion.div>
 
           {/* Clean Call To Action Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 w-full max-w-md"
           >
             <button
               id="signup-landing-btn"
               onClick={() => handleStart('signup')}
-              className="w-full sm:w-52 px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold rounded-xl transition-all shadow-xl shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0 text-sm cursor-pointer flex items-center justify-center gap-2 group"
+              className="w-full sm:w-48 px-6 py-3.5 bg-[#004D34] hover:bg-[#003322] text-white font-mono font-bold rounded-lg transition-all shadow-md transform active:scale-[0.98] text-xs cursor-pointer flex items-center justify-center gap-2 group"
             >
-              Get Started
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              Join PakSpace
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </button>
             <button
               id="explore-landing-btn"
               onClick={() => handleStart('signin')}
-              className="w-full sm:w-52 px-8 py-4 bg-white/20 hover:bg-white/30 border border-[#1F2937]/10 hover:border-[#1F2937]/20 text-[#1F2937] font-bold rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm cursor-pointer"
+              className="w-full sm:w-48 px-6 py-3.5 bg-transparent hover:bg-white/5 border border-[#1E293B] hover:border-gray-500 text-gray-300 font-mono font-bold rounded-lg transition-all transform active:scale-[0.98] text-xs cursor-pointer"
             >
-              Explore Dashboard
+              Explore Communities
             </button>
           </motion.div>
         </div>
@@ -110,14 +112,14 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative w-full max-w-6xl mx-auto px-6 py-10 border-t border-[#1F2937]/10 flex flex-col sm:flex-row items-center justify-between gap-4 z-10 text-xs text-[#1F2937]/60">
-        <p className="font-semibold">
+      <footer className="relative w-full max-w-5xl mx-auto px-6 py-8 border-t border-[#1E293B] flex flex-col sm:flex-row items-center justify-between gap-4 z-10 text-[10px] text-gray-500 font-sans">
+        <p className="tracking-wide text-gray-400 font-mono">
           © 2026 PakSpace Platform. Built for student community in Pakistan 🇵🇰
         </p>
-        <div className="flex gap-6 font-semibold">
-          <span className="hover:text-[#1F2937] cursor-pointer transition-colors">Privacy</span>
-          <span className="hover:text-[#1F2937] cursor-pointer transition-colors">Terms</span>
-          <span className="hover:text-[#1F2937] cursor-pointer transition-colors">Safety</span>
+        <div className="flex gap-6 font-mono text-gray-400">
+          <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
+          <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
+          <span className="hover:text-white cursor-pointer transition-colors">Safety Code</span>
         </div>
       </footer>
     </div>

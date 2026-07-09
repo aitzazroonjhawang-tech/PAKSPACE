@@ -1,4 +1,8 @@
-import { useEffect } from 'react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { AppProvider, useApp } from './context/AppContext';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
@@ -6,23 +10,7 @@ import OnboardingPage from './components/OnboardingPage';
 import MainApp from './components/MainApp';
 
 function AppContent() {
-  const { currentView, currentUser, setView } = useApp();
-
-  useEffect(() => {
-    if (!currentUser) {
-      if (currentView === 'app' || currentView === 'onboarding') {
-        setView('landing');
-      }
-    } else {
-      if (currentView === 'landing' || currentView === 'auth') {
-        if (!currentUser.universityStatus) {
-          setView('onboarding');
-        } else {
-          setView('app');
-        }
-      }
-    }
-  }, [currentUser, currentView, setView]);
+  const { currentView } = useApp();
 
   switch (currentView) {
     case 'landing':
@@ -30,9 +18,9 @@ function AppContent() {
     case 'auth':
       return <AuthPage />;
     case 'onboarding':
-      return currentUser ? <OnboardingPage /> : <LandingPage />;
+      return <OnboardingPage />;
     case 'app':
-      return currentUser ? <MainApp /> : <LandingPage />;
+      return <MainApp />;
     default:
       return <LandingPage />;
   }

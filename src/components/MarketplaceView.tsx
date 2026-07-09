@@ -175,11 +175,11 @@ export function MarketplaceView() {
       {!selectedProduct && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2 text-[var(--brand-blue)] font-mono text-xs font-bold uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-[#047857] font-mono text-xs font-bold uppercase tracking-wider mb-1">
               <ShoppingBag className="w-4 h-4 shrink-0" />
               PakSpace Exchange
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-[var(--text-secondary)]">
+            <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-[#E5E5E0]">
               Campus Marketplace
             </h1>
             <p className="text-xs text-gray-400 mt-1 max-w-xl leading-relaxed">
@@ -193,7 +193,7 @@ export function MarketplaceView() {
               setNewLocation(currentUser.universityName || '');
               setIsSellModalOpen(true);
             }}
-            className="px-4 py-2.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 bg-[#004D34] hover:bg-[#003c28] border border-[#1E293B] text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Sell Item
@@ -212,14 +212,14 @@ export function MarketplaceView() {
             className="space-y-6"
           >
             {/* SEARCH AND FILTER BAR */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-[var(--bg-surface)] border border-[var(--border-color)] p-4 rounded-2xl shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-[#111827] border border-[#1E293B] p-4 rounded-2xl shadow-xl">
               <div className="relative md:col-span-6">
                 <input
                   type="text"
                   placeholder="Search listings, campuses, or books..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-app)]/55 border border-[var(--border-color)] rounded-xl text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#080E21]/55 border border-[#1E293B] rounded-xl text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                 />
                 <Search className="absolute left-3.5 top-3 w-4 h-4 text-gray-500" />
               </div>
@@ -232,8 +232,8 @@ export function MarketplaceView() {
                     onClick={() => setSelectedCondition(cond)}
                     className={`px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-wider border transition-all cursor-pointer whitespace-nowrap ${
                       selectedCondition === cond
-                        ? 'bg-[var(--brand-blue)] border-[var(--brand-blue)] text-[var(--text-secondary)] font-bold'
-                        : 'bg-[var(--bg-app)]/30 border-[var(--border-color)] text-gray-400 hover:text-[var(--text-secondary)]'
+                        ? 'bg-[#004D34] border-[#047857] text-[#E5E5E0] font-bold'
+                        : 'bg-[#080E21]/30 border-[#1E293B] text-gray-400 hover:text-[#E5E5E0]'
                     }`}
                   >
                     {cond === 'All' ? 'All Conditions' : cond}
@@ -250,8 +250,8 @@ export function MarketplaceView() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-4 py-2 rounded-xl text-xs font-medium transition-all border cursor-pointer shrink-0 ${
                     selectedCategory === cat
-                      ? 'bg-[var(--brand-blue)]/15 border-[var(--brand-blue)] text-blue-400 font-bold'
-                      : 'bg-[var(--bg-surface)] border-[var(--border-color)] text-gray-400 hover:text-[var(--text-secondary)] hover:border-gray-700'
+                      ? 'bg-[#004D34]/15 border-[#047857] text-emerald-400 font-bold'
+                      : 'bg-[#111827] border-[#1E293B] text-gray-400 hover:text-[#E5E5E0] hover:border-gray-700'
                   }`}
                 >
                   {cat}
@@ -261,9 +261,9 @@ export function MarketplaceView() {
 
             {/* PRODUCT GRID */}
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-20 px-6 space-y-4 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl">
+              <div className="text-center py-20 px-6 space-y-4 bg-[#111827] border border-[#1E293B] rounded-3xl">
                 <ShoppingBag className="w-10 h-10 text-gray-600 mx-auto" />
-                <h3 className="text-base font-bold text-[var(--text-secondary)] font-display">No listings found</h3>
+                <h3 className="text-base font-bold text-[#E5E5E0] font-display">No listings found</h3>
                 <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
                   Try adjusting your search query, selecting another category, or launching the first listing in this circle!
                 </p>
@@ -272,7 +272,7 @@ export function MarketplaceView() {
                     setNewLocation(currentUser.universityName || '');
                     setIsSellModalOpen(true);
                   }}
-                  className="px-5 py-2.5 bg-[var(--brand-blue)] text-white text-xs font-bold rounded-xl hover:bg-[var(--brand-blue-hover)] transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-[#004D34] text-white text-xs font-bold rounded-xl hover:bg-[#003c28] transition-all cursor-pointer"
                 >
                   Be the First to Sell
                 </button>
@@ -287,12 +287,12 @@ export function MarketplaceView() {
                   return (
                     <div
                       key={product.id}
-                      className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--brand-blue)]/45 transition-all duration-300 flex flex-col justify-between shadow-xl group relative"
+                      className="bg-[#111827] border border-[#1E293B] rounded-2xl overflow-hidden hover:border-[#047857]/45 transition-all duration-300 flex flex-col justify-between shadow-xl group relative"
                     >
                       {/* Image Slide/Thumbnail */}
                       <div 
                         onClick={() => setSelectedProduct(product)}
-                        className="h-44 bg-[var(--bg-app)] relative overflow-hidden cursor-pointer"
+                        className="h-44 bg-[#080E21] relative overflow-hidden cursor-pointer"
                       >
                         <img 
                           src={product.images[0]} 
@@ -300,7 +300,7 @@ export function MarketplaceView() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-3 left-3 bg-[var(--bg-app)]/85 backdrop-blur-xs text-blue-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border border-[var(--border-color)]">
+                        <div className="absolute top-3 left-3 bg-[#080E21]/85 backdrop-blur-xs text-emerald-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border border-[#1E293B]">
                           {product.condition}
                         </div>
                       </div>
@@ -310,12 +310,12 @@ export function MarketplaceView() {
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[10px] text-gray-500 font-mono tracking-wider uppercase">{product.category}</span>
-                            <span className="text-xs font-mono font-bold text-[var(--text-secondary)]">{formatPKR(product.price)}</span>
+                            <span className="text-xs font-mono font-bold text-[#E5E5E0]">{formatPKR(product.price)}</span>
                           </div>
                           
                           <h3 
                             onClick={() => setSelectedProduct(product)}
-                            className="font-bold text-[var(--text-secondary)] text-sm hover:underline cursor-pointer tracking-tight line-clamp-1 text-left"
+                            className="font-bold text-[#E5E5E0] text-sm hover:underline cursor-pointer tracking-tight line-clamp-1 text-left"
                           >
                             {product.title}
                           </h3>
@@ -323,7 +323,7 @@ export function MarketplaceView() {
                         </div>
 
                         {/* Location and Verification footer */}
-                        <div className="pt-3 border-t border-[var(--border-color)] space-y-2 select-none">
+                        <div className="pt-3 border-t border-[#1E293B] space-y-2 select-none">
                           <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                             <MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                             <span className="truncate">{product.campusLocation.split(',')[0]}</span>
@@ -331,8 +331,8 @@ export function MarketplaceView() {
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-                              <span className="text-[9px] font-mono tracking-wider text-blue-500 font-bold uppercase">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="text-[9px] font-mono tracking-wider text-emerald-500 font-bold uppercase">
                                 {seller.id === currentUser.id ? 'My Listing' : 'Verified Student'}
                               </span>
                             </div>
@@ -340,7 +340,7 @@ export function MarketplaceView() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => toggleFavoriteProduct(product.id)}
-                                className={`p-1.5 rounded-lg border border-[var(--border-color)] hover:bg-white/5 transition-all cursor-pointer ${
+                                className={`p-1.5 rounded-lg border border-[#1E293B] hover:bg-white/5 transition-all cursor-pointer ${
                                   isFavorited ? 'text-red-400 bg-red-950/20 border-red-900/40' : 'text-gray-500'
                                 }`}
                               >
@@ -348,7 +348,7 @@ export function MarketplaceView() {
                               </button>
                               <button
                                 onClick={() => setSelectedProduct(product)}
-                                className="px-3 py-1.5 bg-[var(--brand-blue)]/15 border border-[var(--brand-blue)]/30 text-blue-400 rounded-lg text-[10px] font-semibold hover:bg-[var(--brand-blue)]/30 transition-all cursor-pointer"
+                                className="px-3 py-1.5 bg-[#004D34]/15 border border-[#047857]/30 text-emerald-400 rounded-lg text-[10px] font-semibold hover:bg-[#004D34]/30 transition-all cursor-pointer"
                               >
                                 View Details
                               </button>
@@ -373,7 +373,7 @@ export function MarketplaceView() {
           >
             <button
               onClick={() => setSelectedProduct(null)}
-              className="flex items-center gap-1.5 text-xs font-mono font-bold text-gray-400 hover:text-[var(--text-secondary)] cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 text-xs font-mono font-bold text-gray-400 hover:text-[#E5E5E0] cursor-pointer transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               BACK TO MARKETPLACE
@@ -383,18 +383,18 @@ export function MarketplaceView() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
               
               {/* Left Column: Images & Desc */}
-              <div className="md:col-span-7 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl overflow-hidden p-5 space-y-6">
+              <div className="md:col-span-7 bg-[#111827] border border-[#1E293B] rounded-2xl overflow-hidden p-5 space-y-6">
                 
                 {/* Image Showcase */}
                 <div className="space-y-3">
-                  <div className="h-72 md:h-96 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-app)] relative">
+                  <div className="h-72 md:h-96 rounded-xl overflow-hidden border border-[#1E293B] bg-[#080E21] relative">
                     <img 
                       src={selectedProduct.images[0]} 
                       alt={selectedProduct.title} 
                       className="w-full h-full object-contain"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute top-4 left-4 bg-[var(--bg-app)]/90 text-blue-400 font-mono text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-[var(--border-color)]">
+                    <div className="absolute top-4 left-4 bg-[#080E21]/90 text-emerald-400 font-mono text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-[#1E293B]">
                       {selectedProduct.condition}
                     </div>
                   </div>
@@ -405,7 +405,7 @@ export function MarketplaceView() {
                       {selectedProduct.images.map((img, idx) => (
                         <div 
                           key={idx} 
-                          className="w-16 h-16 rounded-lg overflow-hidden border border-[var(--border-color)] bg-[var(--bg-app)] cursor-pointer"
+                          className="w-16 h-16 rounded-lg overflow-hidden border border-[#1E293B] bg-[#080E21] cursor-pointer"
                         >
                           <img src={img} alt="" className="w-full h-full object-cover opacity-80 hover:opacity-100" referrerPolicy="no-referrer" />
                         </div>
@@ -418,10 +418,10 @@ export function MarketplaceView() {
                 <div className="space-y-4 text-left">
                   <div className="flex justify-between items-start gap-3">
                     <div>
-                      <span className="text-[10px] font-mono text-[var(--brand-blue)] tracking-widest uppercase font-bold">{selectedProduct.category}</span>
-                      <h2 className="text-xl md:text-2xl font-bold font-display text-[var(--text-secondary)] tracking-tight mt-1">{selectedProduct.title}</h2>
+                      <span className="text-[10px] font-mono text-[#047857] tracking-widest uppercase font-bold">{selectedProduct.category}</span>
+                      <h2 className="text-xl md:text-2xl font-bold font-display text-[#E5E5E0] tracking-tight mt-1">{selectedProduct.title}</h2>
                     </div>
-                    <span className="text-base md:text-lg font-mono font-bold text-blue-400 bg-blue-950/20 px-3.5 py-1 rounded-xl border border-blue-900/30">
+                    <span className="text-base md:text-lg font-mono font-bold text-emerald-400 bg-emerald-950/20 px-3.5 py-1 rounded-xl border border-emerald-900/30">
                       {formatPKR(selectedProduct.price)}
                     </span>
                   </div>
@@ -430,10 +430,10 @@ export function MarketplaceView() {
                     {selectedProduct.description}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--border-color)] text-xs">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#1E293B] text-xs">
                     <div>
                       <span className="text-gray-500 font-mono uppercase tracking-wider text-[10px]">Campus Location</span>
-                      <p className="text-[var(--text-secondary)] font-medium mt-1 flex items-center gap-1">
+                      <p className="text-[#E5E5E0] font-medium mt-1 flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-gray-500" />
                         {selectedProduct.campusLocation}
                       </p>
@@ -441,7 +441,7 @@ export function MarketplaceView() {
 
                     <div>
                       <span className="text-gray-500 font-mono uppercase tracking-wider text-[10px]">Listed Date</span>
-                      <p className="text-[var(--text-secondary)] font-mono mt-1">
+                      <p className="text-[#E5E5E0] font-mono mt-1">
                         {formatTime(selectedProduct.createdAt)}
                       </p>
                     </div>
@@ -458,7 +458,7 @@ export function MarketplaceView() {
                   const isMyListing = seller.id === currentUser.id;
                   
                   return (
-                    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-5 text-left space-y-4 shadow-xl">
+                    <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-5 text-left space-y-4 shadow-xl">
                       <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-wider">Seller Information</h3>
                       
                       <div className="flex items-center gap-3">
@@ -469,11 +469,11 @@ export function MarketplaceView() {
                           referrerPolicy="no-referrer"
                         />
                         <div>
-                          <h4 className="text-sm font-bold text-[var(--text-secondary)]">{seller.name}</h4>
+                          <h4 className="text-sm font-bold text-[#E5E5E0]">{seller.name}</h4>
                           <p className="text-[10px] text-gray-500">@{seller.username}</p>
                           <div className="flex items-center gap-1 mt-1">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-[9px] font-mono font-bold text-blue-500 uppercase tracking-wider">Verified Student Seller</span>
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase tracking-wider">Verified Student Seller</span>
                           </div>
                         </div>
                       </div>
@@ -485,7 +485,7 @@ export function MarketplaceView() {
                       )}
 
                       {/* Social Actions / Report */}
-                      <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)]">
+                      <div className="flex justify-between items-center pt-3 border-t border-[#1E293B]">
                         <button
                           onClick={() => {
                             reportProduct(selectedProduct.id);
@@ -498,7 +498,7 @@ export function MarketplaceView() {
 
                         <button
                           onClick={() => toggleFavoriteProduct(selectedProduct.id)}
-                          className="text-[10px] text-blue-400 hover:underline flex items-center gap-1 font-mono cursor-pointer"
+                          className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 font-mono cursor-pointer"
                         >
                           <Heart className="w-3.5 h-3.5" />
                           {selectedProduct.favoritedBy?.includes(currentUser.id) ? 'FAVORITED' : 'ADD TO SAVED'}
@@ -510,9 +510,9 @@ export function MarketplaceView() {
 
                 {/* Offer Negotiation / DM Form */}
                 {selectedProduct.sellerId !== currentUser.id && (
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-5 text-left space-y-4 shadow-xl">
+                  <div className="bg-[#111827] border border-[#1E293B] rounded-2xl p-5 text-left space-y-4 shadow-xl">
                     <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      <MessageSquare className="w-4 h-4 text-blue-400" />
+                      <MessageSquare className="w-4 h-4 text-emerald-400" />
                       Campus Negotiation
                     </h3>
 
@@ -534,7 +534,7 @@ export function MarketplaceView() {
                             key={suggestion}
                             type="button"
                             onClick={() => setDmText(suggestion)}
-                            className="px-2.5 py-1.5 bg-[var(--bg-app)]/60 border border-[var(--border-color)] hover:border-[var(--brand-blue)]/40 rounded-lg text-[10px] text-gray-300 hover:text-[var(--text-primary)] transition-all text-left truncate max-w-full cursor-pointer"
+                            className="px-2.5 py-1.5 bg-[#080E21]/60 border border-[#1E293B] hover:border-[#047857]/40 rounded-lg text-[10px] text-gray-300 hover:text-white transition-all text-left truncate max-w-full cursor-pointer"
                           >
                             {suggestion}
                           </button>
@@ -549,12 +549,12 @@ export function MarketplaceView() {
                         rows={3}
                         value={dmText}
                         onChange={(e) => setDmText(e.target.value)}
-                        className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 focus:outline-none focus:border-[var(--brand-blue)] text-xs text-[var(--text-secondary)] resize-none"
+                        className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 focus:outline-none focus:border-[#047857] text-xs text-[#E5E5E0] resize-none"
                       />
 
                       <button
                         type="submit"
-                        className="w-full py-2.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] text-white font-mono font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+                        className="w-full py-2.5 bg-[#004D34] hover:bg-[#003c28] text-white font-mono font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg"
                       >
                         SEND OFFER MESSAGE
                       </button>
@@ -575,16 +575,16 @@ export function MarketplaceView() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-6 shadow-2xl relative space-y-4 my-8"
+              className="w-full max-w-lg bg-[#111827] border border-[#1E293B] rounded-3xl p-6 shadow-2xl relative space-y-4 my-8"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-[var(--border-color)]">
-                <h3 className="text-base font-bold text-[var(--text-secondary)] flex items-center gap-1.5 font-display">
-                  <Tag className="w-4.5 h-4.5 text-blue-500" />
+              <div className="flex justify-between items-center pb-2 border-b border-[#1E293B]">
+                <h3 className="text-base font-bold text-[#E5E5E0] flex items-center gap-1.5 font-display">
+                  <Tag className="w-4.5 h-4.5 text-emerald-500" />
                   List Campus Item
                 </h3>
                 <button
                   onClick={() => setIsSellModalOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -601,7 +601,7 @@ export function MarketplaceView() {
                     placeholder="e.g. CASIO Scientific Calculator fx-991EX"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                    className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                   />
                 </div>
 
@@ -615,7 +615,7 @@ export function MarketplaceView() {
                       placeholder="e.g. 2500"
                       value={newPrice}
                       onChange={(e) => setNewPrice(e.target.value)}
-                      className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                      className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                     />
                   </div>
 
@@ -624,7 +624,7 @@ export function MarketplaceView() {
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as Product['category'])}
-                      className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                      className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                     >
                       <option value="Books">Books</option>
                       <option value="Electronics">Electronics</option>
@@ -643,7 +643,7 @@ export function MarketplaceView() {
                     <select
                       value={newCondition}
                       onChange={(e) => setNewCondition(e.target.value as Product['condition'])}
-                      className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                      className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                     >
                       <option value="New">New</option>
                       <option value="Like New">Like New</option>
@@ -659,7 +659,7 @@ export function MarketplaceView() {
                       placeholder="e.g. NUST Sector H-12, Islamabad"
                       value={newLocation}
                       onChange={(e) => setNewLocation(e.target.value)}
-                      className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 text-xs focus:outline-none focus:border-[var(--brand-blue)] text-[var(--text-secondary)]"
+                      className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 text-xs focus:outline-none focus:border-[#047857] text-[#E5E5E0]"
                     />
                   </div>
                 </div>
@@ -673,7 +673,7 @@ export function MarketplaceView() {
                     rows={4}
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)]/50 focus:outline-none focus:border-[var(--brand-blue)] text-xs text-[var(--text-secondary)] resize-none"
+                    className="w-full px-3 py-2 border border-[#1E293B] rounded-xl bg-[#080E21]/50 focus:outline-none focus:border-[#047857] text-xs text-[#E5E5E0] resize-none"
                   />
                 </div>
 
@@ -698,7 +698,7 @@ export function MarketplaceView() {
                           }
                         }
                       }}
-                      className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
+                      className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer"
                     />
                   </div>
 
@@ -706,7 +706,7 @@ export function MarketplaceView() {
                   {imageList.length > 0 && (
                     <div className="grid grid-cols-4 gap-2 pt-2">
                       {imageList.map((img, idx) => (
-                        <div key={idx} className="relative aspect-square border border-[var(--border-color)] rounded-lg overflow-hidden group">
+                        <div key={idx} className="relative aspect-square border border-[#1E293B] rounded-lg overflow-hidden group">
                           <img src={img} alt="" className="w-full h-full object-cover" />
                           <button
                             type="button"
@@ -724,7 +724,7 @@ export function MarketplaceView() {
                 <div className="pt-3">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-mono font-bold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
+                    className="w-full py-3 bg-[#004D34] hover:bg-[#003c28] border border-[#1E293B] text-white font-mono font-bold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
                   >
                     LAUNCH LISTING
                   </button>
