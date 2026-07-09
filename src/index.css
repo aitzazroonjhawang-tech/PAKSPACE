@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
-  --font-serif: "Plus Jakarta Sans", "Inter", sans-serif;
-  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-serif: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-display: "Geist", "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
   --color-brand-yellow: #FACC15;
@@ -149,3 +149,43 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
 }
+
+/* Rich Text & Post Content Rendering Stylings */
+.prose, .rich-text-content {
+  color: var(--text-primary);
+}
+
+.prose ul, .rich-text-content ul {
+  list-style-type: disc !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose ol, .rich-text-content ol {
+  list-style-type: decimal !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose blockquote, .rich-text-content blockquote {
+  border-left: 3px solid var(--brand-blue) !important;
+  padding-left: 1rem !important;
+  color: var(--text-secondary) !important;
+  font-style: italic !important;
+  margin: 1rem 0 !important;
+  background: color-mix(in srgb, var(--brand-blue) 4%, transparent);
+  border-radius: 4px;
+}
+
+.prose a, .rich-text-content a {
+  color: var(--brand-blue) !important;
+  text-decoration: underline !important;
+}
+
+.prose strong, .rich-text-content strong {
+  font-weight: 700 !important;
+  color: var(--text-primary);
+}
+

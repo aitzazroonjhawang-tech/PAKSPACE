@@ -7,6 +7,7 @@ import {
   ArrowRight, ArrowLeft, Image as ImageIcon, Video, VideoOff
 } from 'lucide-react';
 import PakSpaceLogo from './Logo';
+import UniversityDropdown from './UniversityDropdown';
 
 const INTERESTS_LIST = [
   'Software Engineering',
@@ -372,17 +373,11 @@ export default function OnboardingPage() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                     University / Organization Name
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. NUST, Islamabad or Fast-NUCES"
-                      value={affiliationName}
-                      onChange={(e) => setAffiliationName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-655 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
-                    />
-                    <GraduationCap className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
-                  </div>
+                  <UniversityDropdown 
+                    value={affiliationName} 
+                    onChange={setAffiliationName} 
+                    placeholder="Search or select your university..." 
+                  />
                 </div>
 
                 <div className="space-y-1.5">

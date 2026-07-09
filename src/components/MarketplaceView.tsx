@@ -37,6 +37,7 @@ export function MarketplaceView() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedCondition, setSelectedCondition] = useState<string>('All');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   
   // Create Modal State
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
@@ -55,7 +56,7 @@ export function MarketplaceView() {
   if (!currentUser) return null;
 
   const categories: string[] = ['All', 'Books', 'Electronics', 'Hostel Items', 'Furniture', 'Study Material', 'Other'];
-  const conditions: string[] = ['All', 'New', 'Like New', 'Used'];
+  const conditions: string[] = ['All', 'New', 'Like New', 'Good', 'Fair', 'Used'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -372,7 +373,7 @@ export function MarketplaceView() {
             className="space-y-6"
           >
             <button
-              onClick={() => setSelectedProduct(null)}
+              onClick={() => { setSelectedProduct(null); setActiveImageIdx(0); }}
               className="flex items-center gap-1.5 text-xs font-mono font-bold text-gray-400 hover:text-[var(--text-secondary)] cursor-pointer transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -389,7 +390,7 @@ export function MarketplaceView() {
                 <div className="space-y-3">
                   <div className="h-72 md:h-96 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-app)] relative">
                     <img 
-                      src={selectedProduct.images[0]} 
+                      src={selectedProduct.images[activeImageIdx] || selectedProduct.images[0]} 
                       alt={selectedProduct.title} 
                       className="w-full h-full object-contain"
                       referrerPolicy="no-referrer"
@@ -405,9 +406,14 @@ export function MarketplaceView() {
                       {selectedProduct.images.map((img, idx) => (
                         <div 
                           key={idx} 
-                          className="w-16 h-16 rounded-lg overflow-hidden border border-[var(--border-color)] bg-[var(--bg-app)] cursor-pointer"
+                          onClick={() => setActiveImageIdx(idx)}
+                          className={`w-16 h-16 rounded-lg overflow-hidden border cursor-pointer transition-all ${
+                            activeImageIdx === idx 
+                              ? 'border-blue-500 scale-105' 
+                              : 'border-[var(--border-color)] hover:border-gray-500 opacity-80'
+                          } bg-[var(--bg-app)]`}
                         >
-                          <img src={img} alt="" className="w-full h-full object-cover opacity-80 hover:opacity-100" referrerPolicy="no-referrer" />
+                          <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
                       ))}
                     </div>
@@ -519,6 +525,23 @@ export function MarketplaceView() {
                     <p className="text-xs text-gray-400 leading-relaxed">
                       Send a message directly to the seller to negotiate price, ask questions, or arrange a secure meetup on campus.
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const prefilledMsg = `Hi! I would like to buy your "${selectedProduct.title}" for ${formatPKR(selectedProduct.price)}. Let me know when and where we can meet on campus!`;
+                        const threadId = startOrGetChatThread(selectedProduct.id, selectedProduct.sellerId);
+                        if (threadId) {
+                          sendChatMessage(threadId, prefilledMsg);
+                          triggerToast('Purchase request sent! Redirecting to chat...');
+                          setAppTab('messages');
+                        }
+                      }}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      BUY THIS ITEM (QUICK CHAT)
+                    </button>
 
                     {/* Pre-filled offer buttons */}
                     <div className="space-y-1.5 pt-1">
@@ -647,6 +670,8 @@ export function MarketplaceView() {
                     >
                       <option value="New">New</option>
                       <option value="Like New">Like New</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
                       <option value="Used">Used</option>
                     </select>
                   </div>

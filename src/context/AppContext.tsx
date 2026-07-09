@@ -48,13 +48,20 @@ interface AppContextType {
   setDarkMode: (dark: boolean) => void;
   
   // Interactive actions
-  addPost: (content: string, type: 'text' | 'photo' | 'link' | 'question', options?: { imageUrl?: string; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }) => void;
+  addPost: (content: string, type: 'text' | 'photo' | 'link' | 'question', options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }) => void;
   addComment: (postId: string, content: string, isAnonymous?: boolean) => void;
   toggleLike: (postId: string) => void;
   toggleBookmark: (postId: string) => void;
   toggleFollow: (targetUserId: string) => void;
   joinSpace: (spaceId: string) => void;
-  createSpace: (name: string, description: string, bannerUrl?: string, logoUrl?: string) => void;
+  createSpace: (name: string, description: string, bannerUrl?: string, logoUrl?: string, category?: string, privacy?: 'public' | 'private') => void;
+  updateSpace: (spaceId: string, data: Partial<Space>) => void;
+  deleteSpace: (spaceId: string) => void;
+  deletePost: (postId: string) => void;
+  acceptOrDeclineRequest: (spaceId: string, requesterId: string, action: 'accept' | 'decline') => void;
+  promoteMember: (spaceId: string, memberId: string, role: 'Admin' | 'Moderator' | 'Member') => void;
+  removeMember: (spaceId: string, memberId: string) => void;
+  pinAnnouncement: (spaceId: string, content: string) => void;
   markNotificationAsRead: (notificationId: string) => void;
   markAllNotificationsAsRead: () => void;
   triggerSimulatedInteraction: () => void;
@@ -337,7 +344,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addPost = (
     content: string, 
     type: 'text' | 'photo' | 'link' | 'question', 
-    options?: { imageUrl?: string; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }
+    options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }
   ) => {
     if (!currentUser) return;
     
@@ -349,9 +356,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newPost: Post = {
       id: `post-${Date.now()}`,
       userId: currentUser.id,
+      title: options?.title,
       content,
       postType: type,
       imageUrl: options?.imageUrl,
+      imageUrls: options?.imageUrls,
+      aspectRatio: options?.aspectRatio,
       linkUrl: options?.linkUrl,
       linkTitle: options?.linkTitle,
       spaceId: options?.spaceId,
@@ -515,17 +525,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setSpaces(prev => prev.map(s => {
       if (s.id === spaceId) {
-        const joined = s.members.includes(currentUser.id);
-        const newMembers = joined
-          ? s.members.filter(id => id !== currentUser.id)
-          : [...s.members, currentUser.id];
-        return { ...s, members: newMembers };
+        const isPrivate = s.privacy === 'private';
+        const isMember = s.members.includes(currentUser.id);
+
+        if (isMember) {
+          // Leave space
+          const newMembers = s.members.filter(id => id !== currentUser.id);
+          const newAdmins = (s.admins || []).filter(id => id !== currentUser.id);
+          const newMods = s.moderators.filter(id => id !== currentUser.id);
+          return { ...s, members: newMembers, admins: newAdmins, moderators: newMods };
+        } else {
+          if (isPrivate) {
+            // Add to pendingRequests
+            const pending = s.pendingRequests || [];
+            const isPending = pending.includes(currentUser.id);
+            const newPending = isPending 
+              ? pending.filter(id => id !== currentUser.id)
+              : [...pending, currentUser.id];
+            
+            triggerToast(isPending ? 'Request cancelled' : 'Request to join sent to space owner! 📨');
+            return { ...s, pendingRequests: newPending };
+          } else {
+            // Join directly
+            return { ...s, members: [...s.members, currentUser.id] };
+          }
+        }
       }
       return s;
     }));
   };
 
-  const createSpace = (name: string, description: string, bannerUrl?: string, logoUrl?: string) => {
+  const createSpace = (name: string, description: string, bannerUrl?: string, logoUrl?: string, category?: string, privacy?: 'public' | 'private') => {
     if (!currentUser) return;
 
     const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -535,16 +565,119 @@ export function AppProvider({ children }: { children: ReactNode }) {
       slug,
       description,
       bannerUrl: bannerUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-      logoUrl: logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=16A34A&color=fff&size=128`,
+      logoUrl: logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3B82F6&color=fff&size=128`,
       members: [currentUser.id],
-      moderators: [currentUser.id],
+      moderators: [],
+      admins: [],
       postsCount: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ownerId: currentUser.id,
+      category: category || 'General',
+      privacy: privacy || 'public',
+      pendingRequests: []
     };
 
     setSpaces(prev => [...prev, newSpace]);
     setActiveSpaceId(newSpace.id);
     setAppTab('spaces');
+  };
+
+  const updateSpace = (spaceId: string, data: Partial<Space>) => {
+    setSpaces(prev => prev.map(s => s.id === spaceId ? { ...s, ...data } : s));
+    triggerToast("Space updated successfully! 🛠️");
+  };
+
+  const deleteSpace = (spaceId: string) => {
+    setSpaces(prev => prev.filter(s => s.id !== spaceId));
+    setPosts(prev => prev.filter(p => p.spaceId !== spaceId));
+    setActiveSpaceId(null);
+    setAppTab('spaces');
+    triggerToast("Space deleted permanently. 🗑️");
+  };
+
+  const deletePost = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    setComments(prev => prev.filter(c => c.postId !== postId));
+    triggerToast("Post deleted permanently.");
+  };
+
+  const acceptOrDeclineRequest = (spaceId: string, requesterId: string, action: 'accept' | 'decline') => {
+    setSpaces(prev => prev.map(s => {
+      if (s.id === spaceId) {
+        const pending = s.pendingRequests || [];
+        const newPending = pending.filter(id => id !== requesterId);
+        
+        let newMembers = s.members;
+        if (action === 'accept') {
+          newMembers = [...s.members, requesterId];
+          triggerToast("Member request accepted! 🎉");
+
+          // Send notification to the user who requested
+          const newNotif: Notification = {
+            id: `notif-${Date.now()}`,
+            recipientId: requesterId,
+            senderId: s.ownerId || currentUser?.id || '',
+            type: 'space_invite',
+            spaceId: s.id,
+            spaceName: s.name,
+            read: false,
+            createdAt: new Date().toISOString()
+          };
+          setNotifications(prevNotifs => [newNotif, ...prevNotifs]);
+        } else {
+          triggerToast("Member request declined.");
+        }
+
+        return { ...s, pendingRequests: newPending, members: newMembers };
+      }
+      return s;
+    }));
+  };
+
+  const promoteMember = (spaceId: string, memberId: string, role: 'Admin' | 'Moderator' | 'Member') => {
+    setSpaces(prev => prev.map(s => {
+      if (s.id === spaceId) {
+        let admins = s.admins || [];
+        let moderators = s.moderators || [];
+
+        // Reset
+        admins = admins.filter(id => id !== memberId);
+        moderators = moderators.filter(id => id !== memberId);
+
+        if (role === 'Admin') {
+          admins = [...admins, memberId];
+        } else if (role === 'Moderator') {
+          moderators = [...moderators, memberId];
+        }
+
+        triggerToast(`Member role updated to ${role}! 🎖️`);
+        return { ...s, admins, moderators };
+      }
+      return s;
+    }));
+  };
+
+  const removeMember = (spaceId: string, memberId: string) => {
+    setSpaces(prev => prev.map(s => {
+      if (s.id === spaceId) {
+        const newMembers = s.members.filter(id => id !== memberId);
+        const newAdmins = (s.admins || []).filter(id => id !== memberId);
+        const newMods = s.moderators.filter(id => id !== memberId);
+        triggerToast("Member removed from space.");
+        return { ...s, members: newMembers, admins: newAdmins, moderators: newMods };
+      }
+      return s;
+    }));
+  };
+
+  const pinAnnouncement = (spaceId: string, content: string) => {
+    setSpaces(prev => prev.map(s => {
+      if (s.id === spaceId) {
+        triggerToast(content ? "Announcement pinned! 📌" : "Announcement unpinned.");
+        return { ...s, pinnedAnnouncement: content || undefined };
+      }
+      return s;
+    }));
   };
 
   const markNotificationAsRead = (notificationId: string) => {
@@ -739,6 +872,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleFollow,
       joinSpace,
       createSpace,
+      updateSpace,
+      deleteSpace,
+      deletePost,
+      acceptOrDeclineRequest,
+      promoteMember,
+      removeMember,
+      pinAnnouncement,
       markNotificationAsRead,
       markAllNotificationsAsRead,
       triggerSimulatedInteraction,

@@ -7,15 +7,17 @@ import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Home, Search, Compass, Users, Bell, User as UserIcon, Plus, 
+  Home, Search, Compass, Users, Bell, User as UserIcon, Plus, Upload, Menu,
   Heart, MessageSquare, Bookmark, Share2, Globe, Instagram, Linkedin,
   LogOut, Moon, Sun, ArrowLeft, Check, Compass as CompassIcon, 
   MapPin, GraduationCap, X, Calendar, ArrowRight, ExternalLink, Key, Sparkles,
-  ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings
+  ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings, GripVertical, RefreshCw
 } from 'lucide-react';
 import { Post, Space, User, Scholarship, University, Comment } from '../types';
 import PakSpaceLogo from './Logo';
 import { MarketplaceView } from './MarketplaceView';
+import UniversityDropdown from './UniversityDropdown';
+import { RichTextEditor } from './RichTextEditor';
 
 export default function MainApp() {
   const {
@@ -49,8 +51,10 @@ export default function MainApp() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Create post states
+  const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostType, setNewPostType] = useState<'text' | 'photo' | 'link' | 'question'>('text');
   const [newPostImageUrl, setNewPostImageUrl] = useState('');
@@ -58,11 +62,139 @@ export default function MainApp() {
   const [newPostLinkTitle, setNewPostLinkTitle] = useState('');
   const [newPostSpaceId, setNewPostSpaceId] = useState('');
   const [postAnonymously, setPostAnonymously] = useState(false);
+  const [newPostImageUrls, setNewPostImageUrls] = useState<string[]>([]);
+  const [newPostAspectRatio, setNewPostAspectRatio] = useState<'1:1' | '4:5' | '16:9' | 'original'>('4:5');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [uploadProgressMap, setUploadProgressMap] = useState<Record<string, number>>({});
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+
+  const handleAddPhotos = (files: File[]) => {
+    files.forEach(file => {
+      const reader = new FileReader();
+      const fileId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      
+      setUploadProgressMap(prev => ({ ...prev, [fileId]: 10 }));
+      
+      reader.onloadend = () => {
+        const resultUrl = reader.result as string;
+        let currentProgress = 10;
+        const interval = setInterval(() => {
+          currentProgress += Math.floor(Math.random() * 25) + 15;
+          if (currentProgress >= 100) {
+            currentProgress = 100;
+            clearInterval(interval);
+            setNewPostImageUrls(prev => [...prev, resultUrl]);
+            setTimeout(() => {
+              setUploadProgressMap(prev => {
+                const updated = { ...prev };
+                delete updated[fileId];
+                return updated;
+              });
+            }, 300);
+          }
+          setUploadProgressMap(prev => ({ ...prev, [fileId]: currentProgress }));
+        }, 120);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleReplacePhoto = (idx: number, file: File) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      const fileId = `img-replace-${Date.now()}`;
+      setUploadProgressMap(prev => ({ ...prev, [fileId]: 20 }));
+      reader.onloadend = () => {
+        let currentProgress = 20;
+        const interval = setInterval(() => {
+          currentProgress += Math.floor(Math.random() * 30) + 15;
+          if (currentProgress >= 100) {
+            currentProgress = 100;
+            clearInterval(interval);
+            setNewPostImageUrls(prev => {
+              const updated = [...prev];
+              updated[idx] = reader.result as string;
+              return updated;
+            });
+            setTimeout(() => {
+              setUploadProgressMap(prev => {
+                const updated = { ...prev };
+                delete updated[fileId];
+                return updated;
+              });
+            }, 300);
+          }
+          setUploadProgressMap(prev => ({ ...prev, [fileId]: currentProgress }));
+        }, 100);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Restore drafts on mount
+  useEffect(() => {
+    try {
+      const draftTitle = localStorage.getItem('pakspace_draft_title');
+      const draftContent = localStorage.getItem('pakspace_draft_content');
+      const draftType = localStorage.getItem('pakspace_draft_type');
+      const draftImageUrls = localStorage.getItem('pakspace_draft_imageUrls');
+      const draftAspectRatio = localStorage.getItem('pakspace_draft_aspectRatio');
+      const draftLinkUrl = localStorage.getItem('pakspace_draft_linkUrl');
+      const draftLinkTitle = localStorage.getItem('pakspace_draft_linkTitle');
+      const draftSpaceId = localStorage.getItem('pakspace_draft_spaceId');
+      const draftAnon = localStorage.getItem('pakspace_draft_anon');
+
+      if (draftTitle) setNewPostTitle(draftTitle);
+      if (draftContent) setNewPostContent(draftContent);
+      if (draftType) setNewPostType(draftType as any);
+      if (draftImageUrls) setNewPostImageUrls(JSON.parse(draftImageUrls));
+      if (draftAspectRatio) setNewPostAspectRatio(draftAspectRatio as any);
+      if (draftLinkUrl) setNewPostLinkUrl(draftLinkUrl);
+      if (draftLinkTitle) setNewPostLinkTitle(draftLinkTitle);
+      if (draftSpaceId) setNewPostSpaceId(draftSpaceId);
+      if (draftAnon) setPostAnonymously(draftAnon === 'true');
+    } catch (e) {
+      console.error('Error loading draft', e);
+    }
+  }, []);
+
+  // Save drafts as user types
+  useEffect(() => {
+    localStorage.setItem('pakspace_draft_title', newPostTitle);
+    localStorage.setItem('pakspace_draft_content', newPostContent);
+    localStorage.setItem('pakspace_draft_type', newPostType);
+    localStorage.setItem('pakspace_draft_imageUrls', JSON.stringify(newPostImageUrls));
+    localStorage.setItem('pakspace_draft_aspectRatio', newPostAspectRatio);
+    localStorage.setItem('pakspace_draft_linkUrl', newPostLinkUrl);
+    localStorage.setItem('pakspace_draft_linkTitle', newPostLinkTitle);
+    localStorage.setItem('pakspace_draft_spaceId', newPostSpaceId);
+    localStorage.setItem('pakspace_draft_anon', String(postAnonymously));
+  }, [newPostTitle, newPostContent, newPostType, newPostImageUrls, newPostAspectRatio, newPostLinkUrl, newPostLinkTitle, newPostSpaceId, postAnonymously]);
+
+  // Handle Ctrl+V paste event for images
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setNewPostImageUrls(prev => [...prev, reader.result as string]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+  };
 
   // Create space states
   const [newSpaceName, setNewSpaceName] = useState('');
   const [newSpaceDescription, setNewSpaceDescription] = useState('');
   const [newSpaceBanner, setNewSpaceBanner] = useState('');
+  const [newSpaceLogo, setNewSpaceLogo] = useState('');
+  const [newSpaceCategory, setNewSpaceCategory] = useState('General Discussions');
+  const [newSpacePrivacy, setNewSpacePrivacy] = useState<'public' | 'private'>('public');
 
   // Edit profile states
   const [editName, setEditName] = useState(currentUser?.name || '');
@@ -76,6 +208,7 @@ export default function MainApp() {
   const [editLinkedin, setEditLinkedin] = useState(currentUser?.linkedIn || '');
   const [editAvatarUrl, setEditAvatarUrl] = useState(currentUser?.avatarUrl || '');
   const [editCoverUrl, setEditCoverUrl] = useState(currentUser?.coverUrl || '');
+  const [editGraduationYear, setEditGraduationYear] = useState(currentUser?.graduationYear || '');
 
   // Sync edits on currentUser change
   useEffect(() => {
@@ -91,6 +224,7 @@ export default function MainApp() {
       setEditLinkedin(currentUser.linkedIn || '');
       setEditAvatarUrl(currentUser.avatarUrl);
       setEditCoverUrl(currentUser.coverUrl || '');
+      setEditGraduationYear(currentUser.graduationYear || '');
     }
   }, [currentUser]);
 
@@ -173,25 +307,49 @@ export default function MainApp() {
   // Handle post submit
   const handlePostSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!newPostContent.trim()) return;
+    if (!newPostContent.trim() && newPostImageUrls.length === 0 && !newPostLinkUrl.trim()) return;
 
-    addPost(newPostContent, newPostType, {
-      imageUrl: newPostType === 'photo' ? newPostImageUrl : undefined,
-      linkUrl: newPostType === 'link' ? newPostLinkUrl : undefined,
-      linkTitle: newPostType === 'link' ? newPostLinkTitle : undefined,
-      spaceId: newPostSpaceId || activeSpaceId || undefined,
-      isAnonymous: postAnonymously
-    });
+    setIsPublishing(true);
 
-    setNewPostContent('');
-    setNewPostType('text');
-    setNewPostImageUrl('');
-    setNewPostLinkUrl('');
-    setNewPostLinkTitle('');
-    setNewPostSpaceId('');
-    setPostAnonymously(false);
-    setIsCreatePostOpen(false);
-    triggerToast(postAnonymously ? 'Published anonymously! 🔒' : 'Post shared with PakSpace! ✨');
+    // Simulated premium publishing lag
+    setTimeout(() => {
+      addPost(newPostContent, newPostType, {
+        title: newPostTitle || undefined,
+        imageUrl: newPostType === 'photo' ? (newPostImageUrls[0] || undefined) : undefined,
+        imageUrls: newPostType === 'photo' ? newPostImageUrls : undefined,
+        aspectRatio: newPostType === 'photo' ? newPostAspectRatio : undefined,
+        linkUrl: newPostType === 'link' ? newPostLinkUrl : undefined,
+        linkTitle: newPostType === 'link' ? newPostLinkTitle : undefined,
+        spaceId: newPostSpaceId || activeSpaceId || undefined,
+        isAnonymous: postAnonymously
+      });
+
+      setNewPostTitle('');
+      setNewPostContent('');
+      setNewPostType('text');
+      setNewPostImageUrl('');
+      setNewPostImageUrls([]);
+      setNewPostAspectRatio('4:5');
+      setNewPostLinkUrl('');
+      setNewPostLinkTitle('');
+      setNewPostSpaceId('');
+      setPostAnonymously(false);
+      setIsPublishing(false);
+      setIsCreatePostOpen(false);
+
+      // Clear draft storage
+      localStorage.removeItem('pakspace_draft_title');
+      localStorage.removeItem('pakspace_draft_content');
+      localStorage.removeItem('pakspace_draft_type');
+      localStorage.removeItem('pakspace_draft_imageUrls');
+      localStorage.removeItem('pakspace_draft_aspectRatio');
+      localStorage.removeItem('pakspace_draft_linkUrl');
+      localStorage.removeItem('pakspace_draft_linkTitle');
+      localStorage.removeItem('pakspace_draft_spaceId');
+      localStorage.removeItem('pakspace_draft_anon');
+
+      triggerToast(postAnonymously ? 'Published anonymously! 🔒' : 'Post shared with PakSpace! ✨');
+    }, 1200);
   };
 
   // Handle space submit
@@ -199,10 +357,20 @@ export default function MainApp() {
     e.preventDefault();
     if (!newSpaceName.trim() || !newSpaceDescription.trim()) return;
 
-    createSpace(newSpaceName, newSpaceDescription, newSpaceBanner || undefined);
+    createSpace(
+      newSpaceName, 
+      newSpaceDescription, 
+      newSpaceBanner || undefined,
+      newSpaceLogo || undefined,
+      newSpaceCategory,
+      newSpacePrivacy
+    );
     setNewSpaceName('');
     setNewSpaceDescription('');
     setNewSpaceBanner('');
+    setNewSpaceLogo('');
+    setNewSpaceCategory('General Discussions');
+    setNewSpacePrivacy('public');
     setIsCreateSpaceOpen(false);
     triggerToast(`"${newSpaceName}" Space Created! 🇵🇰`);
   };
@@ -221,7 +389,8 @@ export default function MainApp() {
       coverUrl: editCoverUrl,
       website: editWebsite || undefined,
       instagram: editInstagram || undefined,
-      linkedIn: editLinkedin || undefined
+      linkedIn: editLinkedin || undefined,
+      graduationYear: editGraduationYear || undefined
     });
     setIsEditProfileOpen(false);
     triggerToast('Profile updated successfully!');
@@ -355,17 +524,27 @@ export default function MainApp() {
 
       {/* MOBILE HEADER */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--border-color)] bg-[var(--bg-app)] sticky top-0 z-40 w-full select-none">
-        <span 
-          onClick={() => {
-            setAppTab('home');
-            setActiveSpaceId(null);
-            setActiveUserId(null);
-            setActivePostId(null);
-          }}
-          className="cursor-pointer"
-        >
-          <PakSpaceLogo showText={true} horizontal={true} size="sm" />
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            id="mobile-hamburger-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          
+          <span 
+            onClick={() => {
+              setAppTab('home');
+              setActiveSpaceId(null);
+              setActiveUserId(null);
+              setActivePostId(null);
+            }}
+            className="cursor-pointer"
+          >
+            <PakSpaceLogo showText={true} horizontal={true} size="sm" />
+          </span>
+        </div>
 
         <div className="flex items-center space-x-3">
           <button
@@ -392,38 +571,101 @@ export default function MainApp() {
         </div>
       </header>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[var(--border-color)] bg-[var(--bg-app)] flex justify-around items-center py-2 z-40 select-none">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = appTab === item.id && !activeSpaceId && !activeUserId;
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                setAppTab(item.id as any);
-                setActiveSpaceId(null);
-                setActiveUserId(null);
-                setActivePostId(null);
-                if (item.id === 'notifications') {
-                  markAllNotificationsAsRead();
-                }
-              }}
-              className="flex flex-col items-center p-2 relative cursor-pointer animate-fade-in"
+      {/* MOBILE SLIDE-IN HAMBURGER MENU DRAWER */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 md:hidden select-none">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            />
+
+            {/* Menu Container */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 bottom-0 left-0 w-72 bg-[var(--bg-surface-2)] border-r border-[var(--border-color)] p-6 flex flex-col justify-between"
             >
-              <Icon className={`w-5.5 h-5.5 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-blue-450 font-bold' : 'text-gray-400'}`}>
-                {item.label}
-              </span>
-              {item.badge ? (
-                <span className="absolute top-1 right-2 bg-[var(--brand-blue)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full scale-90 shadow-md">
-                  {item.badge}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </nav>
+              <div className="space-y-8">
+                <div className="flex justify-between items-center">
+                  <PakSpaceLogo showText={true} horizontal={true} size="sm" />
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="space-y-2">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = appTab === item.id && !activeSpaceId && !activeUserId;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setAppTab(item.id as any);
+                          setActiveSpaceId(null);
+                          setActiveUserId(null);
+                          setActivePostId(null);
+                          if (item.id === 'notifications') {
+                            markAllNotificationsAsRead();
+                          }
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                          isActive 
+                            ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-500' 
+                            : 'hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge ? (
+                          <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Bottom footer inside drawer */}
+              <div className="pt-6 border-t border-white/[0.06] space-y-4">
+                <div className="flex items-center gap-3">
+                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-[var(--text-primary)]">{currentUser.name}</p>
+                    <p className="text-[10px] text-gray-500">@{currentUser.username}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to sign out of PakSpace?')) {
+                      signOut();
+                    }
+                  }}
+                  className="w-full py-2.5 bg-red-950/20 hover:bg-red-900/30 text-red-400 rounded-xl text-xs font-bold transition-all border border-red-900/30 cursor-pointer"
+                >
+                  Log Out
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MOBILE FLOATING CREATE BUTTON */}
       <div className="md:hidden fixed bottom-20 right-4 z-40">
@@ -529,161 +771,443 @@ export default function MainApp() {
       {/* A. CREATE POST DIALOG */}
       <AnimatePresence>
         {isCreatePostOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs overflow-y-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[var(--bg-surface-2)]/95 border border-white/[0.08] rounded-3xl p-6 shadow-2xl relative space-y-4"
+              initial={{ opacity: 0, scale: 0.98, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 10 }}
+              className="w-full max-w-5xl bg-[var(--bg-surface-2)] border border-[var(--border-color)] rounded-3xl p-6 md:p-8 shadow-2xl relative space-y-6 my-8"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-display">
-                  <Plus className="w-4.5 h-4.5 text-blue-400" />
-                  Compose Post
-                </h3>
+              {/* Header */}
+              <div className="flex justify-between items-center pb-4 border-b border-[var(--border-color)]">
+                <div className="space-y-1 text-left">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2 font-display">
+                    <Plus className="w-5 h-5 text-blue-500" />
+                    Compose Premium Post
+                  </h3>
+                  <p className="text-xs text-gray-500">Publish beautiful editorial content directly to PakSpace.</p>
+                </div>
                 <button
                   onClick={() => setIsCreatePostOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all"
+                  className="p-1.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handlePostSubmit} className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/[0.06] pb-3">
-                  {(['text', 'photo', 'link', 'question'] as const).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setNewPostType(type)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize border transition-all cursor-pointer ${
-                        newPostType === type
-                          ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-[var(--text-primary)]'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Post inside a Space (Optional)</label>
-                  <select
-                    value={newPostSpaceId}
-                    onChange={(e) => setNewPostSpaceId(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                  >
-                    <option value="">No Space (General Feed)</option>
-                    {spaces.map(s => (
-                      <option key={s.id} value={s.id} className="bg-[var(--bg-surface-2)]">{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <textarea
-                  required
-                  placeholder={
-                    newPostType === 'question' 
-                      ? "What is your question? E.g. What is the merit list cutoff for SE in NUST?" 
-                      : "Share what is on your mind..."
-                  }
-                  rows={4}
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  className="w-full px-4 py-3 border border-white/[0.06] rounded-xl bg-white/[0.02] focus:outline-none focus:border-blue-500 text-sm resize-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
-                />
-
-                {newPostType === 'photo' && (
+              {/* Grid content */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Side: Composer Form (lg:col-span-7) */}
+                <form onSubmit={handlePostSubmit} className="lg:col-span-7 space-y-5 text-left">
+                  
+                  {/* Select Type */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block">Upload Photo from Gallery</label>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setNewPostImageUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
-                      />
-                      {newPostImageUrl && (
-                        <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/[0.08] bg-white/5">
-                          <img src={newPostImageUrl} alt="Preview" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => setNewPostImageUrl('')}
-                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 cursor-pointer transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post Style</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(['text', 'photo', 'link', 'question'] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setNewPostType(type)}
+                          className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize border transition-all cursor-pointer ${
+                            newPostType === type
+                              ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
+                              : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-[var(--text-primary)]'
+                          }`}
+                        >
+                          {type === 'photo' ? 'Photo Story' : type === 'link' ? 'Article/Link' : type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Select Space */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Publish Inside Space</label>
+                    <select
+                      value={newPostSpaceId}
+                      onChange={(e) => setNewPostSpaceId(e.target.value)}
+                      className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all cursor-pointer"
+                    >
+                      <option value="">No Space (General Campus Feed)</option>
+                      {spaces.map(s => (
+                        <option key={s.id} value={s.id} className="bg-[var(--bg-surface-2)]">{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Optional Title */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post Title (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="Give your thoughts a premium editorial title..."
+                      value={newPostTitle}
+                      onChange={(e) => setNewPostTitle(e.target.value)}
+                      className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-sm focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  {/* Caption & Content: Rich Text Editor */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Content & Story</label>
+                    <RichTextEditor
+                      value={newPostContent}
+                      onChange={setNewPostContent}
+                      placeholder={
+                        newPostType === 'question' 
+                          ? "What is your question? E.g., What is the merit list cutoff for SE in NUST?" 
+                          : "Express yourself. Double click text to format. Type bullet lists, quotes, or links..."
+                      }
+                      maxCharacters={2000}
+                    />
+                  </div>
+
+                  {/* Photo Specific Section */}
+                  {newPostType === 'photo' && (
+                    <div className="space-y-5 animate-fade-in">
+                      {/* Aspect Ratio Selector */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Choose Media Aspect Ratio</label>
+                        <div className="flex flex-wrap gap-2">
+                          {(['1:1', '4:5', '16:9', 'original'] as const).map((ratio) => (
+                            <button
+                              key={ratio}
+                              type="button"
+                              onClick={() => setNewPostAspectRatio(ratio)}
+                              className={`flex-1 min-w-[70px] px-3 py-2 rounded-xl text-[10px] font-bold uppercase border transition-all cursor-pointer ${
+                                newPostAspectRatio === ratio
+                                  ? 'bg-blue-600/10 border-blue-500 text-blue-400'
+                                  : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                              }`}
+                            >
+                              {ratio === '16:9' ? 'Landscape' : ratio === '1:1' ? 'Square' : ratio === '4:5' ? 'Portrait' : 'Original'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Drag & Drop Zone */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Upload Gallery Images</label>
+                        <div
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const files = Array.from(e.dataTransfer.files) as File[];
+                            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                            if (imageFiles.length > 0) {
+                              handleAddPhotos(imageFiles);
+                            }
+                          }}
+                          className="border-2 border-dashed border-[var(--border-color)] hover:border-blue-500/50 rounded-2xl p-6 text-center transition-all bg-white/[0.01] hover:bg-white/[0.03] cursor-pointer"
+                          onClick={() => {
+                            const fileInput = document.getElementById('post-image-input');
+                            if (fileInput) fileInput.click();
+                          }}
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <Upload className="w-6 h-6 text-blue-500 animate-pulse" />
+                            <p className="text-xs font-bold text-[var(--text-primary)]">Drag & Drop photos here, or click to browse</p>
+                            <p className="text-[10px] text-gray-500">Supports multiple files. Or paste images with Ctrl+V directly inside editor.</p>
+                          </div>
+                          <input
+                            id="post-image-input"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []) as File[];
+                              const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                              if (imageFiles.length > 0) {
+                                handleAddPhotos(imageFiles);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Active Uploading States */}
+                      {Object.keys(uploadProgressMap).length > 0 && (
+                        <div className="space-y-2">
+                          {Object.entries(uploadProgressMap).map(([id, progress]) => (
+                            <div key={id} className="p-3 bg-white/5 rounded-xl border border-[var(--border-color)] flex items-center justify-between gap-3 animate-fade-in">
+                              <div className="flex items-center gap-2">
+                                <Upload className="w-4 h-4 text-blue-400 animate-bounce" />
+                                <span className="text-[10px] text-gray-400 font-mono">Uploading media asset...</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-500 transition-all duration-150" style={{ width: `${progress}%` }} />
+                                </div>
+                                <span className="text-[9px] font-mono font-bold text-blue-400">{progress}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Image Preview List with Move/Reorder & Remove */}
+                      {newPostImageUrls.length > 0 && (
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Uploaded Gallery ({newPostImageUrls.length}) — Drag to Reorder</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {newPostImageUrls.map((url, idx) => (
+                              <div 
+                                key={idx} 
+                                draggable
+                                onDragStart={() => setDraggedIdx(idx)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => {
+                                  if (draggedIdx !== null && draggedIdx !== idx) {
+                                    const reordered = [...newPostImageUrls];
+                                    const [draggedItem] = reordered.splice(draggedIdx, 1);
+                                    reordered.splice(idx, 0, draggedItem);
+                                    setNewPostImageUrls(reordered);
+                                  }
+                                  setDraggedIdx(null);
+                                }}
+                                onDragEnd={() => setDraggedIdx(null)}
+                                className={`relative aspect-square rounded-xl overflow-hidden border border-[var(--border-color)] bg-white/5 group transition-all duration-150 ${draggedIdx === idx ? 'opacity-40 scale-95' : ''}`}
+                              >
+                                <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                                
+                                {/* Drag handle / Grip on hover */}
+                                <div className="absolute top-1 left-1 bg-black/60 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                                  <GripVertical className="w-3.5 h-3.5 text-white" />
+                                </div>
+
+                                {/* Replace Photo on Hover */}
+                                <div className="absolute top-1 right-8 bg-black/60 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-blue-600 transition-colors">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      document.getElementById(`replace-photo-input-${idx}`)?.click();
+                                    }}
+                                    className="p-0 border-none bg-transparent cursor-pointer flex items-center text-white"
+                                    title="Replace Image"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                  </button>
+                                  <input
+                                    id={`replace-photo-input-${idx}`}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        handleReplacePhoto(idx, file);
+                                      }
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Overlay Shift Controls (Manual fallback buttons) */}
+                                <div className="absolute inset-x-0 bottom-0 bg-black/85 p-1 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    type="button"
+                                    disabled={idx === 0}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (idx > 0) {
+                                        const reordered = [...newPostImageUrls];
+                                        const temp = reordered[idx];
+                                        reordered[idx] = reordered[idx - 1];
+                                        reordered[idx - 1] = temp;
+                                        setNewPostImageUrls(reordered);
+                                      }
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-white disabled:opacity-30 cursor-pointer text-xs font-bold font-sans"
+                                    title="Move Left"
+                                  >
+                                    ←
+                                  </button>
+                                  <span className="text-[8px] font-mono font-bold text-gray-300">Pos {idx + 1}</span>
+                                  <button
+                                    type="button"
+                                    disabled={idx === newPostImageUrls.length - 1}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (idx < newPostImageUrls.length - 1) {
+                                        const reordered = [...newPostImageUrls];
+                                        const temp = reordered[idx];
+                                        reordered[idx] = reordered[idx + 1];
+                                        reordered[idx + 1] = temp;
+                                        setNewPostImageUrls(reordered);
+                                      }
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-white disabled:opacity-30 cursor-pointer text-xs font-bold font-sans"
+                                    title="Move Right"
+                                  >
+                                    →
+                                  </button>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPostImageUrls(prev => prev.filter((_, i) => i !== idx));
+                                  }}
+                                  className="absolute top-1 right-1 bg-black/80 hover:bg-red-600 text-white rounded-full p-1 cursor-pointer transition-colors"
+                                  title="Remove Image"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {newPostType === 'link' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link URL</label>
-                      <input
-                        type="url"
-                        placeholder="https://hec.gov.pk/..."
-                        value={newPostLinkUrl}
-                        onChange={(e) => setNewPostLinkUrl(e.target.value)}
-                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                      />
+                  {/* Link Details */}
+                  {newPostType === 'link' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://hec.gov.pk/..."
+                          value={newPostLinkUrl}
+                          onChange={(e) => setNewPostLinkUrl(e.target.value)}
+                          className="w-full px-4 py-2.5 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link Display Title</label>
+                        <input
+                          type="text"
+                          placeholder="HEC Portal Guide"
+                          value={newPostLinkTitle}
+                          onChange={(e) => setNewPostLinkTitle(e.target.value)}
+                          className="w-full px-4 py-2.5 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link Display Title</label>
-                      <input
-                        type="text"
-                        placeholder="HEC Portal Guide"
-                        value={newPostLinkTitle}
-                        onChange={(e) => setNewPostLinkTitle(e.target.value)}
-                        className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {/* ANONYMOUS TOGGLE OPTION */}
-                <div className="flex items-center justify-between p-3.5 bg-[var(--bg-app)]/40 border border-[var(--border-color)] rounded-xl select-none text-left">
-                  <div className="flex items-center gap-2">
-                    <EyeOff className="w-4 h-4 text-blue-400 shrink-0" />
-                    <div>
-                      <span className="text-xs font-bold text-[var(--text-secondary)] block">Post Anonymously</span>
-                      <span className="text-[10px] text-gray-500 block">Hide your name, degree, and university details.</span>
+                  {/* Post As Segmented Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post As</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setPostAnonymously(false)}
+                        className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                          !postAnonymously
+                            ? 'bg-blue-600/10 border-blue-500/50 shadow-sm shadow-blue-500/5'
+                            : 'bg-white/[0.01] border-[var(--border-color)] hover:bg-white/[0.03]'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          !postAnonymously ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-500'
+                        }`}>
+                          {!postAnonymously && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-[var(--text-primary)] block truncate">My Public Profile</span>
+                          <span className="text-[9px] text-gray-500 block truncate">Share as {currentUser.name}</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPostAnonymously(true)}
+                        className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                          postAnonymously
+                            ? 'bg-blue-600/10 border-blue-500/50 shadow-sm shadow-blue-500/5'
+                            : 'bg-white/[0.01] border-[var(--border-color)] hover:bg-white/[0.03]'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          postAnonymously ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-500'
+                        }`}>
+                          {postAnonymously && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-[var(--text-primary)] block truncate">Anonymous Student</span>
+                          <span className="text-[9px] text-gray-500 block truncate">Hide name, degree, and university</span>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPostAnonymously(!postAnonymously)}
-                    className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer relative flex items-center ${
-                      postAnonymously ? 'bg-[var(--brand-blue)]' : 'bg-[var(--border-color)]'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
-                      postAnonymously ? 'translate-x-4' : 'translate-x-0'
-                    }`} />
-                  </button>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm('Discard your draft?')) {
+                          setNewPostTitle('');
+                          setNewPostContent('');
+                          setNewPostType('text');
+                          setNewPostImageUrls([]);
+                          setNewPostLinkUrl('');
+                          setNewPostLinkTitle('');
+                          setPostAnonymously(false);
+                          setIsCreatePostOpen(false);
+                          localStorage.removeItem('pakspace_draft_title');
+                          localStorage.removeItem('pakspace_draft_content');
+                        }
+                      }}
+                      className="px-5 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-[var(--text-primary)] rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPublishing || (!newPostContent.trim() && newPostImageUrls.length === 0 && !newPostLinkUrl.trim())}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/40 disabled:text-gray-500 border-none text-white font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-blue-500/15"
+                    >
+                      {isPublishing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Publishing...
+                        </>
+                      ) : (
+                        'Publish Post'
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Right Side: Live Editorial Preview (lg:col-span-5) */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Live Editorial Preview</span>
+                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-mono px-2 py-0.5 rounded-full uppercase font-bold animate-pulse">Updates Instantly</span>
+                  </div>
+                  <div className="border border-[var(--border-color)] rounded-2xl p-0.5 bg-white/[0.01]">
+                    <PostCard 
+                      post={{
+                        id: 'preview',
+                        userId: currentUser.id,
+                        title: newPostTitle || undefined,
+                        content: newPostContent || 'What’s happening on your campus? Type in the editor to preview...',
+                        imageUrl: newPostType === 'photo' ? (newPostImageUrls[0] || undefined) : undefined,
+                        imageUrls: newPostType === 'photo' ? newPostImageUrls : undefined,
+                        aspectRatio: newPostAspectRatio,
+                        linkUrl: newPostType === 'link' ? (newPostLinkUrl || undefined) : undefined,
+                        linkTitle: newPostType === 'link' ? (newPostLinkTitle || undefined) : undefined,
+                        postType: newPostType,
+                        likes: [],
+                        bookmarks: [],
+                        commentsCount: 0,
+                        createdAt: new Date().toISOString(),
+                        spaceId: newPostSpaceId || undefined,
+                        isAnonymous: postAnonymously,
+                        anonymousName: 'Anonymous Student'
+                      }}
+                      isPreview={true}
+                    />
+                  </div>
                 </div>
-
-                <button
-                  id="submit-post-btn"
-                  type="submit"
-                  className="w-full py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-semibold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
-                >
-                  Publish Post
-                </button>
-              </form>
+              </div>
             </motion.div>
           </div>
         )}
@@ -730,28 +1254,69 @@ export default function MainApp() {
                   <textarea
                     required
                     placeholder="What is this community space about? Guidelines, expectations, topics..."
-                    rows={3}
+                    rows={2}
                     value={newSpaceDescription}
                     onChange={(e) => setNewSpaceDescription(e.target.value)}
                     className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 resize-none text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-600"
                   />
                 </div>
 
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Banner Image URL (Optional)</label>
-                  <input
-                    type="url"
-                    placeholder="https://images.unsplash.com/..."
-                    value={newSpaceBanner}
-                    onChange={(e) => setNewSpaceBanner(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Logo Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/logo..."
+                      value={newSpaceLogo}
+                      onChange={(e) => setNewSpaceLogo(e.target.value)}
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Banner Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/banner..."
+                      value={newSpaceBanner}
+                      onChange={(e) => setNewSpaceBanner(e.target.value)}
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Category</label>
+                    <select
+                      value={newSpaceCategory}
+                      onChange={(e) => setNewSpaceCategory(e.target.value)}
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-[#1A1E24] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                    >
+                      <option value="General Discussions" className="bg-[#1A1E24]">General Discussions</option>
+                      <option value="Degree Group" className="bg-[#1A1E24]">Degree Group</option>
+                      <option value="Campus Club" className="bg-[#1A1E24]">Campus Club</option>
+                      <option value="Admissions & Scholarships" className="bg-[#1A1E24]">Admissions & Scholarships</option>
+                      <option value="Hostel & Accommodation" className="bg-[#1A1E24]">Hostel & Accommodation</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Privacy Settings</label>
+                    <select
+                      value={newSpacePrivacy}
+                      onChange={(e) => setNewSpacePrivacy(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-[#1A1E24] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                    >
+                      <option value="public" className="bg-[#1A1E24]">Public Space (Instant Join)</option>
+                      <option value="private" className="bg-[#1A1E24]">Private Space (Approval Required)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <button
                   id="submit-space-btn"
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-blue-600/10"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-blue-600/10"
                 >
                   Create Space
                 </button>
@@ -875,22 +1440,30 @@ export default function MainApp() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">University / Org Name</label>
-                    <input
-                      type="text"
+                    <UniversityDropdown
                       value={editUniversityName}
-                      onChange={(e) => setEditUniversityName(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                      onChange={setEditUniversityName}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Degree Program / Role Description</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Degree Program / Role</label>
                     <input
                       type="text"
                       value={editDegree}
                       onChange={(e) => setEditDegree(e.target.value)}
+                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Graduation Year</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2027"
+                      value={editGraduationYear}
+                      onChange={(e) => setEditGraduationYear(e.target.value)}
                       className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
                     />
                   </div>
@@ -1090,7 +1663,7 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
   const { currentUser, posts } = useApp();
   
   return (
-    <div className="space-y-6 animate-fade-in font-sans">
+    <div className="max-w-[650px] mx-auto space-y-6 animate-fade-in font-sans w-full px-1 sm:px-0">
       <div 
         onClick={onCreateClick}
         className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[var(--brand-blue)]/30 hover:bg-white/[0.04] transition-all select-none"
@@ -1548,6 +2121,22 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
 
                 <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
                   <div className="space-y-1.5 text-left">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-blue-600/10 text-blue-400 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                        {space.category || 'General Discussions'}
+                      </span>
+                      {space.privacy === 'private' ? (
+                        <span className="bg-amber-500/10 text-amber-500 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />
+                          Private
+                        </span>
+                      ) : (
+                        <span className="bg-emerald-500/10 text-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex items-center gap-1">
+                          <Unlock className="w-2.5 h-2.5" />
+                          Public
+                        </span>
+                      )}
+                    </div>
                     <h3 
                       onClick={() => setActiveSpaceId(space.id)}
                       className="font-bold text-[var(--text-primary)] hover:underline cursor-pointer tracking-tight"
@@ -1567,10 +2156,19 @@ function SpacesGridView({ onCreateSpaceClick }: { onCreateSpaceClick: () => void
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         joined 
                           ? 'bg-white/5 text-gray-450 border border-white/5' 
-                          : 'bg-blue-600/10 text-blue-400 hover:bg-blue-600/20'
+                          : (space.privacy === 'private' && (space.pendingRequests || []).includes(currentUser.id))
+                            ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
+                            : 'bg-blue-600/10 text-blue-400 hover:bg-blue-600/20'
                       }`}
                     >
-                      {joined ? 'Joined' : 'Join'}
+                      {joined 
+                        ? 'Joined' 
+                        : space.privacy === 'private' 
+                          ? (space.pendingRequests || []).includes(currentUser.id) 
+                            ? 'Requested' 
+                            : 'Request to Join'
+                          : 'Join'
+                      }
                     </button>
                   </div>
                 </div>
@@ -1788,11 +2386,12 @@ function ScholarshipCard({ scholarship }: { scholarship: Scholarship; key?: any 
 }
 
 // COMPONENT: CARD POST
-function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any }) {
-  const { currentUser, users, comments, spaces, toggleLike, toggleBookmark, toggleFollow, addComment, triggerToast, setActiveUserId, setActiveSpaceId } = useApp();
+function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: () => void; isPreview?: boolean; key?: any }) {
+  const { currentUser, users, comments, spaces, toggleLike, toggleBookmark, toggleFollow, addComment, triggerToast, setActiveUserId, setActiveSpaceId, deletePost } = useApp();
   const [quickCommentText, setQuickCommentText] = useState('');
   const [showCommentsSection, setShowCommentsSection] = useState(false);
   const [commentAnonymously, setCommentAnonymously] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   if (!currentUser) return null;
 
@@ -1821,7 +2420,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
 
   const handleCommentSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!quickCommentText.trim()) return;
+    if (isPreview || !quickCommentText.trim()) return;
     addComment(post.id, quickCommentText, commentAnonymously);
     setQuickCommentText('');
     setCommentAnonymously(false);
@@ -1829,6 +2428,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
   };
 
   const handleSharePost = (postId: string) => {
+    if (isPreview) return;
     const fakeLink = `${window.location.origin}/post/${postId}`;
     navigator.clipboard.writeText(fakeLink).then(() => {
       triggerToast('Post link copied to clipboard! 📋');
@@ -1850,66 +2450,83 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
   };
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-5 md:p-6 text-left space-y-4 shadow-xl hover:border-[var(--brand-blue)]/20 transition-all duration-200">
-      <div className="flex justify-between items-center select-none">
-        <div className="flex items-center space-x-3">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-5 md:p-6 text-left space-y-4 shadow-xs hover:shadow-md hover:border-[var(--border-strong)]/40 hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
+      {/* Visual Indicator for Live Preview mode */}
+      {isPreview && (
+        <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 text-[9px] text-center font-bold text-blue-400 py-1 uppercase tracking-widest border-b border-blue-500/10 select-none">
+          Live Interactive Preview
+        </div>
+      )}
+
+      {/* Header section */}
+      <div className={`flex justify-between items-start select-none ${isPreview ? 'pt-4' : ''}`}>
+        <div className="flex items-center space-x-3 min-w-0">
           <img 
             onClick={() => {
-              if (post.isAnonymous) return;
+              if (isPreview || post.isAnonymous) return;
               setActiveUserId(postAuthor.id);
               if (onBack) onBack();
             }}
             src={post.isAnonymous ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' : postAuthor.avatarUrl} 
             alt={post.isAnonymous ? 'Anonymous' : postAuthor.name} 
-            className={`w-10 h-10 rounded-full object-cover border border-white/10 ${post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90'}`}
+            className={`w-10 h-10 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
             referrerPolicy="no-referrer"
           />
-          <div>
-            <div className="flex items-center gap-1.5 text-left">
+          <div className="min-w-0">
+            {/* Display name, Username, University, and timestamp in one single clean row */}
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-left min-w-0">
               <span 
                 onClick={() => {
-                  if (post.isAnonymous) return;
+                  if (isPreview || post.isAnonymous) return;
                   setActiveUserId(postAuthor.id);
                   if (onBack) onBack();
                 }}
-                className={`text-xs font-bold text-[var(--text-secondary)] tracking-tight ${post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                className={`font-bold text-[var(--text-primary)] text-[14px] leading-tight shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
               >
                 {post.isAnonymous ? (post.anonymousName || 'Anonymous Student') : postAuthor.name}
               </span>
+              <span className="text-gray-500 font-medium text-[11px] shrink-0">
+                {post.isAnonymous ? '@anonymous' : `@${postAuthor.username}`}
+              </span>
+              
               {post.isAnonymous ? (
-                <span className="text-[9px] bg-red-950/20 border border-red-900/30 text-red-400 px-1.5 py-0.5 rounded-md font-mono leading-none flex items-center gap-1">
+                <span className="text-[8px] bg-red-950/20 border border-red-900/30 text-red-400 px-1.5 py-0.5 rounded font-mono leading-none flex items-center gap-0.5 shrink-0">
                   <Lock className="w-2.5 h-2.5 shrink-0" />
                   ANONYMOUS
                 </span>
               ) : postAuthor.universityName ? (
-                <span className="text-[9px] bg-white/5 text-gray-400 px-1.5 py-0.5 rounded-md font-medium leading-none truncate max-w-[120px]">
+                <span className="text-[10px] bg-white/5 border border-[var(--border-color)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded-md font-medium leading-none truncate max-w-[140px] shrink-0">
                   {postAuthor.universityName.split(',')[0]}
                 </span>
               ) : null}
+
+              <span className="text-gray-400 text-[10px] shrink-0 select-none">•</span>
+              <span className="text-gray-500 text-[11px] shrink-0">
+                {formatTime(post.createdAt)}
+              </span>
             </div>
-            <p className="text-[10px] text-gray-500 leading-none mt-1">
-              {post.isAnonymous ? '@anonymous' : `@${postAuthor.username}`} • {formatTime(post.createdAt)}
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Action column on the right */}
+        <div className="flex items-center space-x-2 shrink-0">
           {post.spaceId && (
             <span 
               onClick={() => {
+                if (isPreview) return;
                 setActiveSpaceId(post.spaceId!);
                 if (onBack) onBack();
               }}
-              className="text-[9px] bg-[var(--brand-blue)]/20 text-blue-400 font-bold px-2 py-1 rounded-lg hover:underline cursor-pointer"
+              className="text-[9px] bg-blue-600/10 text-blue-400 font-bold px-2 py-1 rounded-lg hover:underline cursor-pointer shrink-0"
             >
               in {spaces.find(s => s.id === post.spaceId)?.name || 'Space'}
             </span>
           )}
 
-          {!isOwner && !post.isAnonymous && (
+          {!isPreview && !isOwner && !post.isAnonymous && (
             <button
               onClick={() => toggleFollow(postAuthor.id)}
-              className={`text-[10px] font-bold hover:underline bg-transparent border-none cursor-pointer ${
+              className={`text-[10px] font-bold hover:underline bg-transparent border-none cursor-pointer shrink-0 ${
                 currentUser.interests.includes(`following-${postAuthor.id}`)
                   ? 'text-gray-400'
                   : 'text-blue-400'
@@ -1918,24 +2535,134 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
               {currentUser.interests.includes(`following-${postAuthor.id}`) ? 'Following' : 'Follow'}
             </button>
           )}
+
+          {!isPreview && (isOwner || (post.spaceId && (() => {
+            const sp = spaces.find(s => s.id === post.spaceId);
+            return sp ? (sp.ownerId === currentUser.id || (sp.admins || []).includes(currentUser.id) || (sp.moderators || []).includes(currentUser.id)) : false;
+          })())) && (
+            <button
+              onClick={() => {
+                if (confirm("Are you sure you want to delete this post permanently?")) {
+                  deletePost(post.id);
+                }
+              }}
+              className="text-[10px] font-bold text-red-400 hover:text-red-300 hover:underline bg-transparent border-none cursor-pointer p-0 shrink-0 flex items-center"
+              title="Delete Post"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Post body content */}
       <div className="space-y-3">
-        <p className="text-xs text-gray-250 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-        
-        {post.imageUrl && (
-          <div className="rounded-2xl overflow-hidden border border-white/[0.06] max-h-72 bg-black/20">
-            <img src={post.imageUrl} alt="Shared attachment" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-          </div>
+        {post.title && (
+          <h2 className="text-lg font-bold text-[var(--text-primary)] leading-snug tracking-tight font-sans">
+            {post.title}
+          </h2>
         )}
 
+        {post.content.startsWith('<') || post.content.includes('</') ? (
+          <div 
+            className="rich-text-content text-[14px] sm:text-[15px] text-[var(--text-primary)] leading-relaxed font-sans prose dark:prose-invert max-w-none break-words"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        ) : (
+          <p className="text-[14px] sm:text-[15px] text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap font-sans break-words">{post.content}</p>
+        )}
+        
+        {/* Photos display blocks */}
+        {post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0 ? (
+          <div className="space-y-2 select-none">
+            {post.imageUrls.length === 1 ? (
+              /* 1 image: Large preview */
+              <div 
+                onClick={() => setLightboxUrl(post.imageUrls![0])}
+                className={`relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5 cursor-zoom-in ${
+                  post.aspectRatio === '1:1'
+                    ? 'aspect-[1/1]'
+                    : post.aspectRatio === '4:5'
+                      ? 'aspect-[4/5]'
+                      : post.aspectRatio === '16:9'
+                        ? 'aspect-[16/9]'
+                        : post.aspectRatio === 'original'
+                          ? 'h-auto max-h-[420px]'
+                          : 'aspect-[4/5]'
+                }`}
+              >
+                <img src={post.imageUrls[0]} alt="Campus attachment" className="w-full h-full object-cover max-h-[420px]" referrerPolicy="no-referrer" />
+              </div>
+            ) : post.imageUrls.length === 2 ? (
+              /* 2 images: Two-column layout */
+              <div className="grid grid-cols-2 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
+                {post.imageUrls.slice(0, 2).map((url, i) => (
+                  <div key={i} onClick={() => setLightboxUrl(url)} className="relative aspect-[4/5] overflow-hidden cursor-zoom-in">
+                    <img src={url} alt={`Campus attachment ${i}`} className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
+                  </div>
+                ))}
+              </div>
+            ) : post.imageUrls.length === 3 ? (
+              /* 3 images: One large, two smaller row */
+              <div className="grid grid-cols-3 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
+                <div onClick={() => setLightboxUrl(post.imageUrls![0])} className="col-span-2 aspect-[4/5] overflow-hidden cursor-zoom-in">
+                  <img src={post.imageUrls[0]} alt="Campus attachment 0" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
+                </div>
+                <div className="grid grid-rows-2 gap-2.5">
+                  <div onClick={() => setLightboxUrl(post.imageUrls![1])} className="aspect-square overflow-hidden relative cursor-zoom-in">
+                    <img src={post.imageUrls[1]} alt="Campus attachment 1" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
+                  </div>
+                  <div onClick={() => setLightboxUrl(post.imageUrls![2])} className="aspect-square overflow-hidden relative cursor-zoom-in">
+                    <img src={post.imageUrls[2]} alt="Campus attachment 2" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* 4+ images: responsive grid */
+              <div className="grid grid-cols-2 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
+                {post.imageUrls.slice(0, 4).map((url, i) => {
+                  const isLast = i === 3 && post.imageUrls!.length > 4;
+                  return (
+                    <div key={i} onClick={() => setLightboxUrl(url)} className="relative aspect-square overflow-hidden cursor-zoom-in">
+                      <img src={url} alt={`Campus attachment ${i}`} className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
+                      {isLast && (
+                        <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center">
+                          <span className="text-base font-bold text-white">+{post.imageUrls!.length - 4}</span>
+                          <span className="text-[10px] text-gray-300 font-medium">More Photos</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : post.imageUrl ? (
+          <div 
+            onClick={() => setLightboxUrl(post.imageUrl!)}
+            className={`rounded-2xl overflow-hidden border border-[var(--border-color)] bg-black/5 cursor-zoom-in ${
+              post.aspectRatio === '1:1'
+                ? 'aspect-[1/1]'
+                : post.aspectRatio === '4:5'
+                  ? 'aspect-[4/5]'
+                  : post.aspectRatio === '16:9'
+                    ? 'aspect-[16/9]'
+                    : post.aspectRatio === 'original'
+                      ? 'h-auto max-h-[420px]'
+                      : 'aspect-[4/5]'
+            }`}
+          >
+            <img src={post.imageUrl} alt="Campus attachment" className="w-full h-full object-cover max-h-[420px]" referrerPolicy="no-referrer" />
+          </div>
+        ) : null}
+
+        {/* Link attachments */}
         {post.linkUrl && (
           <a
             href={post.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block p-3 border border-white/[0.06] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] transition-colors"
+            className="block p-3 border border-[var(--border-color)] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] transition-colors"
           >
             <div className="flex justify-between items-center text-xs">
               <div className="min-w-0 text-left">
@@ -1948,34 +2675,38 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
         )}
       </div>
 
+      {/* Action Bar */}
       <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] text-gray-400 text-xs select-none">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
           <button
+            disabled={isPreview}
             onClick={() => toggleLike(post.id)}
-            className={`flex items-center space-x-1.5 hover:text-red-400 transition-colors cursor-pointer ${
-              hasLiked ? 'text-red-450 font-bold animate-pulse' : ''
+            className={`flex items-center space-x-1.5 hover:text-red-450 transition-colors cursor-pointer disabled:opacity-50 ${
+              hasLiked ? 'text-red-400 font-bold animate-pulse' : ''
             }`}
           >
             <Heart className={`w-4 h-4 ${hasLiked ? 'fill-red-500 stroke-red-500' : ''}`} />
-            <span>{post.likes.length}</span>
+            <span className="text-xs">{post.likes.length}</span>
           </button>
 
           <button
+            disabled={isPreview}
             onClick={() => setShowCommentsSection(!showCommentsSection)}
-            className={`flex items-center space-x-1.5 hover:text-blue-450 transition-colors cursor-pointer ${
+            className={`flex items-center space-x-1.5 hover:text-blue-450 transition-colors cursor-pointer disabled:opacity-50 ${
               showCommentsSection ? 'text-blue-400 font-bold' : ''
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>{postComments.length}</span>
+            <span className="text-xs">{postComments.length}</span>
           </button>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           <button
+            disabled={isPreview}
             onClick={() => toggleBookmark(post.id)}
-            className={`hover:text-blue-400 transition-colors cursor-pointer ${
-              hasBookmarked ? 'text-blue-400 fill-blue-500/20 stroke-blue-400' : ''
+            className={`hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50 ${
+              hasBookmarked ? 'text-blue-400 fill-blue-500/10 stroke-blue-400' : ''
             }`}
             title="Bookmark post"
           >
@@ -1983,8 +2714,9 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
           </button>
 
           <button
+            disabled={isPreview}
             onClick={() => handleSharePost(post.id)}
-            className="hover:text-blue-400 transition-colors cursor-pointer"
+            className="hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50"
             title="Share link"
           >
             <Share2 className="w-4 h-4" />
@@ -1992,10 +2724,31 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
         </div>
       </div>
 
-      {showCommentsSection && (
+      {/* Muted count of comments if section is closed */}
+      {!isPreview && postComments.length > 0 && !showCommentsSection && (
+        <button
+          onClick={() => setShowCommentsSection(true)}
+          className="text-xs text-blue-400 hover:text-blue-500 font-semibold cursor-pointer py-1 block text-left transition-colors"
+        >
+          View {postComments.length} {postComments.length === 1 ? 'comment' : 'comments'}
+        </button>
+      )}
+
+      {/* Hide option if open */}
+      {!isPreview && showCommentsSection && postComments.length > 0 && (
+        <button
+          onClick={() => setShowCommentsSection(false)}
+          className="text-xs text-gray-500 hover:text-[var(--text-primary)] font-semibold cursor-pointer py-1 block text-left transition-colors"
+        >
+          Hide comments
+        </button>
+      )}
+
+      {/* Expanded Comments Section */}
+      {showCommentsSection && !isPreview && (
         <div className="pt-4 border-t border-white/[0.06] space-y-4 animate-fade-in">
           {postComments.length > 0 && (
-            <div className="space-y-3.5 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-3.5 max-h-64 overflow-y-auto pr-1">
               {postComments.map((comment) => {
                 const author = users.find(u => u.id === comment.userId) || {
                   id: 'deleted',
@@ -2032,6 +2785,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
             </div>
           )}
 
+          {/* Comment Creation Form */}
           <form onSubmit={handleCommentSubmit} className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <input
@@ -2044,7 +2798,7 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
               <button
                 type="submit"
                 disabled={!quickCommentText.trim()}
-                className="px-4 py-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl cursor-pointer shrink-0 transition-colors"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-45 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl cursor-pointer shrink-0 transition-colors"
               >
                 Reply
               </button>
@@ -2067,21 +2821,75 @@ function PostCard({ post, onBack }: { post: Post; onBack?: () => void; key?: any
           </form>
         </div>
       )}
+
+      {/* Lightbox full-screen modal overlay */}
+      {lightboxUrl && (
+        <div 
+          onClick={() => setLightboxUrl(null)}
+          className="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[200] p-4 cursor-zoom-out animate-fade-in select-none"
+        >
+          <div className="relative max-w-full max-h-[85vh] flex flex-col items-center">
+            <img src={lightboxUrl} alt="Enlarged campus moment" className="rounded-2xl max-w-full max-h-[80vh] object-contain shadow-2xl border border-white/15" />
+            <p className="text-[10px] text-gray-500 mt-3 font-mono tracking-wider">Click anywhere to return to feed</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // COMPONENT: INDIVIDUAL SPACE SUBVIEW DETAILED PAGE
 function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void }) {
-  const { spaces, currentUser, posts, joinSpace, triggerToast, setAppTab, setActiveSpaceId } = useApp();
+  const { 
+    spaces, 
+    currentUser, 
+    posts, 
+    users,
+    joinSpace, 
+    updateSpace, 
+    deleteSpace, 
+    acceptOrDeclineRequest, 
+    promoteMember, 
+    removeMember, 
+    pinAnnouncement, 
+    triggerToast, 
+    setActiveSpaceId 
+  } = useApp();
+
+  const [activeSubTab, setActiveSubTab] = useState<'feed' | 'members' | 'settings'>('feed');
   const [spaceSearchQuery, setSpaceSearchQuery] = useState('');
+  
+  // Settings edit states
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editLogoUrl, setEditLogoUrl] = useState('');
+  const [editBannerUrl, setEditBannerUrl] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editPrivacy, setEditPrivacy] = useState<'public' | 'private'>('public');
+  const [newAnnounceText, setNewAnnounceText] = useState('');
 
   if (!currentUser) return null;
   const space = spaces.find(s => s.id === spaceId);
-  if (!space) return <p className="text-sm">Space not found.</p>;
+  if (!space) return <p className="text-sm p-4 text-center">Space not found.</p>;
+
+  // Initialize edit states when space loads
+  const handleOpenSettings = () => {
+    setEditName(space.name);
+    setEditDescription(space.description);
+    setEditLogoUrl(space.logoUrl);
+    setEditBannerUrl(space.bannerUrl);
+    setEditCategory(space.category || 'General Discussions');
+    setEditPrivacy(space.privacy || 'public');
+    setNewAnnounceText(space.pinnedAnnouncement || '');
+    setActiveSubTab('settings');
+  };
 
   const isMember = space.members.includes(currentUser.id);
-  
+  const isOwner = space.ownerId === currentUser.id;
+  const isAdmin = isOwner || (space.admins || []).includes(currentUser.id);
+  const isMod = isOwner || isAdmin || (space.moderators || []).includes(currentUser.id);
+  const isPending = (space.pendingRequests || []).includes(currentUser.id);
+
   const spacePosts = posts.filter(p => p.spaceId === space.id && 
     (p.content.toLowerCase().includes(spaceSearchQuery.toLowerCase()) || spaceSearchQuery === '')
   );
@@ -2098,8 +2906,25 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
     return `${days}d ago`;
   };
 
+  const handleUpdateSpaceSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    updateSpace(space.id, {
+      name: editName,
+      description: editDescription,
+      logoUrl: editLogoUrl,
+      bannerUrl: editBannerUrl,
+      category: editCategory,
+      privacy: editPrivacy
+    });
+  };
+
+  const handlePinAnnouncementSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    pinAnnouncement(space.id, newAnnounceText);
+  };
+
   return (
-    <div className="space-y-6 text-left animate-fade-in">
+    <div className="space-y-6 text-left animate-fade-in pb-12">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[var(--text-primary)] mb-2 cursor-pointer transition-colors"
@@ -2108,32 +2933,58 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
         Back to Spaces
       </button>
 
+      {/* SPACE HEADER CARD */}
       <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl overflow-hidden text-left shadow-xl">
-        <div className="h-44 bg-gray-900/45 relative">
+        <div className="h-36 sm:h-44 bg-gray-900/45 relative">
           <img src={space.bannerUrl} alt={space.name} className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
         </div>
 
-        <div className="p-6 relative space-y-4">
-          <div className="absolute -top-10 left-6">
-            <img src={space.logoUrl} alt={space.name} className="w-16 h-16 rounded-2xl object-cover border-4 border-[var(--bg-surface-2)] shadow-sm bg-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
+        <div className="p-5 sm:p-6 relative space-y-4">
+          <div className="absolute -top-10 left-5 sm:left-6">
+            <img src={space.logoUrl} alt={space.name} className="w-16 h-16 rounded-2xl object-cover border-4 border-[#12161A] shadow-sm bg-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
-              <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-display">{space.name}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-display">{space.name}</h2>
+                <span className="bg-blue-600/10 text-blue-400 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                  {space.category || 'General Discussions'}
+                </span>
+                {space.privacy === 'private' ? (
+                  <span className="bg-amber-500/10 text-amber-500 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" />
+                    Private
+                  </span>
+                ) : (
+                  <span className="bg-emerald-500/10 text-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex items-center gap-1">
+                    <Unlock className="w-2.5 h-2.5" />
+                    Public
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-400">{space.members.length} members • Created {formatTime(space.createdAt)}</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={() => joinSpace(space.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-grow sm:flex-grow-0 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   isMember 
                     ? 'bg-white/5 text-gray-400 border border-white/5' 
-                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/15'
+                    : isPending
+                      ? 'bg-amber-500/10 text-amber-500'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/15'
                 }`}
               >
-                {isMember ? 'Leave Space' : 'Join Space'}
+                {isMember 
+                  ? 'Leave Space' 
+                  : isPending 
+                    ? 'Requested' 
+                    : space.privacy === 'private' 
+                      ? 'Request to Join' 
+                      : 'Join Space'
+                }
               </button>
             </div>
           </div>
@@ -2142,34 +2993,398 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/[0.02] p-4 rounded-2xl border border-white/[0.06] shadow-xl">
-        <span className="text-xs font-bold text-gray-450 uppercase tracking-wider">{spacePosts.length} Posts in Space</span>
-        
-        <div className="relative w-full sm:w-64">
-          <input
-            type="text"
-            placeholder="Search posts inside space..."
-            value={spaceSearchQuery}
-            onChange={(e) => setSpaceSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-white/[0.01] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
-          />
-          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500" />
-        </div>
-      </div>
-
-      <div className="space-y-4 text-left">
-        {spacePosts.length === 0 ? (
-          <div className="text-center py-12 space-y-2 bg-white/[0.02] border border-white/[0.06] rounded-3xl">
-            <MessageSquare className="w-8 h-8 text-gray-500 mx-auto" />
-            <p className="text-sm font-semibold text-[var(--text-primary)]">No posts in this space yet</p>
-            <p className="text-xs text-gray-400">Be the first to share something useful with other members!</p>
-          </div>
-        ) : (
-          spacePosts.map((post) => (
-            <PostCard key={post.id} post={post} onBack={onBack} />
-          ))
+      {/* SPACE SUB-NAVIGATION TABS */}
+      <div className="flex border-b border-white/[0.06] select-none">
+        <button
+          onClick={() => setActiveSubTab('feed')}
+          className={`px-4 py-2 text-xs font-bold transition-all relative cursor-pointer ${
+            activeSubTab === 'feed' ? 'text-blue-400' : 'text-gray-400 hover:text-[var(--text-primary)]'
+          }`}
+        >
+          Discussions (Feed)
+          {activeSubTab === 'feed' && (
+            <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab('members')}
+          className={`px-4 py-2 text-xs font-bold transition-all relative cursor-pointer ${
+            activeSubTab === 'members' ? 'text-blue-400' : 'text-gray-400 hover:text-[var(--text-primary)]'
+          }`}
+        >
+          Members ({space.members.length})
+          {activeSubTab === 'members' && (
+            <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+          )}
+        </button>
+        {isAdmin && (
+          <button
+            onClick={handleOpenSettings}
+            className={`px-4 py-2 text-xs font-bold transition-all relative cursor-pointer ${
+              activeSubTab === 'settings' ? 'text-blue-400' : 'text-gray-400 hover:text-[var(--text-primary)]'
+            }`}
+          >
+            Settings & Moderation
+            {activeSubTab === 'settings' && (
+              <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            )}
+          </button>
         )}
       </div>
+
+      {/* TAB 1: FEED VIEW */}
+      {activeSubTab === 'feed' && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Check Privacy Restrictions */}
+          {space.privacy === 'private' && !isMember ? (
+            <div className="text-center py-16 px-6 space-y-4 bg-white/[0.02] border border-white/[0.06] rounded-3xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-amber-500/[0.01] pointer-events-none" />
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-2 animate-pulse">
+                <Lock className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">🔒 Private Space</h3>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+                This space is restricted to approved campus members. Only approved members can view posts, create posts, or join discussions.
+              </p>
+              {!isPending ? (
+                <button
+                  onClick={() => joinSpace(space.id)}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-md shadow-blue-600/10"
+                >
+                  Request to Join
+                </button>
+              ) : (
+                <span className="inline-block px-4 py-2 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-xl">
+                  Waiting for Approval...
+                </span>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Pinned Announcement */}
+              {space.pinnedAnnouncement && (
+                <div className="bg-[#FAF7EE] text-[#1F2937] p-5 rounded-3xl border border-[#FACC15] relative text-left shadow-lg">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex gap-2.5 items-start">
+                      <Sparkles className="w-5 h-5 text-[#3B82F6] shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-[10px] font-bold tracking-wider uppercase text-[#3B82F6] font-mono block">Pinned Announcement</span>
+                        <p className="text-xs font-medium text-gray-700 leading-relaxed mt-1 whitespace-pre-wrap">{space.pinnedAnnouncement}</p>
+                      </div>
+                    </div>
+                    {isMod && (
+                      <button
+                        onClick={() => pinAnnouncement(space.id, '')}
+                        className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors"
+                        title="Unpin"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Feed Controls */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/[0.02] p-4 rounded-2xl border border-white/[0.06] shadow-xl">
+                <span className="text-xs font-bold text-gray-450 uppercase tracking-wider">{spacePosts.length} Posts inside Space</span>
+                
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search posts inside space..."
+                    value={spaceSearchQuery}
+                    onChange={(e) => setSpaceSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-white/[0.01] border border-white/[0.06] rounded-xl text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  />
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                </div>
+              </div>
+
+              {/* Space Posts */}
+              <div className="space-y-4">
+                {spacePosts.length === 0 ? (
+                  <div className="text-center py-12 space-y-2 bg-white/[0.02] border border-white/[0.06] rounded-3xl">
+                    <MessageSquare className="w-8 h-8 text-gray-500 mx-auto" />
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">No posts in this space yet</p>
+                    <p className="text-xs text-gray-400">Be the first to share academic resources or campus queries!</p>
+                  </div>
+                ) : (
+                  spacePosts.map((post) => (
+                    <PostCard key={post.id} post={post} onBack={onBack} />
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: MEMBERS VIEW */}
+      {activeSubTab === 'members' && (
+        <div className="space-y-6 animate-fade-in text-left">
+          {space.privacy === 'private' && !isMember ? (
+            <p className="text-xs text-gray-400 text-center py-8">Members are hidden for private spaces.</p>
+          ) : (
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-450 font-mono mb-4">Space Members List ({space.members.length})</h3>
+                <div className="divide-y divide-white/[0.04]">
+                  {space.members.map(memberId => {
+                    const mDetails = users.find(u => u.id === memberId);
+                    if (!mDetails) return null;
+
+                    const mIsOwner = space.ownerId === memberId;
+                    const mIsAdmin = mIsOwner || (space.admins || []).includes(memberId);
+                    const mIsMod = mIsOwner || mIsAdmin || (space.moderators || []).includes(memberId);
+
+                    let roleBadge = "Member";
+                    if (mIsOwner) roleBadge = "Owner";
+                    else if (mIsAdmin) roleBadge = "Admin";
+                    else if (mIsMod) roleBadge = "Moderator";
+
+                    return (
+                      <div key={memberId} className="py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <img src={mDetails.avatarUrl} alt={mDetails.name} className="w-9 h-9 rounded-full object-cover border border-white/10" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[var(--text-primary)]">{mDetails.name}</span>
+                              <span className="bg-white/5 text-gray-400 text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">
+                                {roleBadge}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500">@{mDetails.username} • {mDetails.universityName || 'Student'}</p>
+                          </div>
+                        </div>
+
+                        {/* Owner commands to manage members */}
+                        {isOwner && memberId !== currentUser.id && (
+                          <div className="flex gap-2">
+                            {roleBadge === "Member" && (
+                              <>
+                                <button
+                                  onClick={() => promoteMember(space.id, memberId, 'Admin')}
+                                  className="text-[10px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-2 py-1 rounded-lg"
+                                >
+                                  Make Admin
+                                </button>
+                                <button
+                                  onClick={() => promoteMember(space.id, memberId, 'Moderator')}
+                                  className="text-[10px] bg-green-500/10 hover:bg-green-500/20 text-green-400 px-2 py-1 rounded-lg"
+                                >
+                                  Make Mod
+                                </button>
+                              </>
+                            )}
+                            {roleBadge !== "Owner" && (
+                              <>
+                                {roleBadge !== "Member" && (
+                                  <button
+                                    onClick={() => promoteMember(space.id, memberId, 'Member')}
+                                    className="text-[10px] bg-gray-500/15 hover:bg-gray-500/25 text-gray-400 px-2 py-1 rounded-lg"
+                                  >
+                                    Demote
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => removeMember(space.id, memberId)}
+                                  className="text-[10px] bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded-lg"
+                                >
+                                  Remove
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: SETTINGS & MODERATION (ADMIN ONLY) */}
+      {activeSubTab === 'settings' && isAdmin && (
+        <div className="space-y-6 animate-fade-in text-left">
+          
+          {/* PART A: Pinned Announcements */}
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-450 font-mono">📌 Pin Announcement</h3>
+            <form onSubmit={handlePinAnnouncementSubmit} className="space-y-3">
+              <textarea
+                value={newAnnounceText}
+                onChange={(e) => setNewAnnounceText(e.target.value)}
+                placeholder="Type some announcements to pin at the top of the feed (e.g. syllabus updates, deadlines, rules)..."
+                rows={2}
+                className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Save Announcement
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* PART B: Join Requests (For Private Spaces) */}
+          {space.privacy === 'private' && (
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-450 font-mono">Pending Join Requests ({(space.pendingRequests || []).length})</h3>
+              
+              {(space.pendingRequests || []).length === 0 ? (
+                <p className="text-xs text-gray-500">No pending requests to join this private space.</p>
+              ) : (
+                <div className="divide-y divide-white/[0.04]">
+                  {(space.pendingRequests || []).map(reqId => {
+                    const reqUser = users.find(u => u.id === reqId);
+                    if (!reqUser) return null;
+
+                    return (
+                      <div key={reqId} className="py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <img src={reqUser.avatarUrl} alt={reqUser.name} className="w-9 h-9 rounded-full object-cover" />
+                          <div>
+                            <span className="text-xs font-bold text-[var(--text-primary)]">{reqUser.name}</span>
+                            <p className="text-[10px] text-gray-500">@{reqUser.username} • {reqUser.universityName}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => acceptOrDeclineRequest(space.id, reqId, 'accept')}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => acceptOrDeclineRequest(space.id, reqId, 'decline')}
+                            className="bg-white/5 hover:bg-white/10 text-gray-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/5"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PART C: Edit Space Info */}
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-450 font-mono">Edit Space Details</h3>
+            <form onSubmit={handleUpdateSpaceSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Space Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Description</label>
+                <textarea
+                  required
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Logo Image URL</label>
+                  <input
+                    type="url"
+                    value={editLogoUrl}
+                    onChange={(e) => setEditLogoUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Banner Image URL</label>
+                  <input
+                    type="url"
+                    value={editBannerUrl}
+                    onChange={(e) => setEditBannerUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Category</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-[#1A1E24] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  >
+                    <option value="General Discussions" className="bg-[#1A1E24]">General Discussions</option>
+                    <option value="Degree Group" className="bg-[#1A1E24]">Degree Group</option>
+                    <option value="Campus Club" className="bg-[#1A1E24]">Campus Club</option>
+                    <option value="Admissions & Scholarships" className="bg-[#1A1E24]">Admissions & Scholarships</option>
+                    <option value="Hostel & Accommodation" className="bg-[#1A1E24]">Hostel & Accommodation</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Privacy Settings</label>
+                  <select
+                    value={editPrivacy}
+                    onChange={(e) => setEditPrivacy(e.target.value as any)}
+                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-[#1A1E24] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
+                  >
+                    <option value="public" className="bg-[#1A1E24]">Public Space (Instant Join)</option>
+                    <option value="private" className="bg-[#1A1E24]">Private Space (Approval Required)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-md"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* PART D: Danger Zone (Owner Only) */}
+          {isOwner && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-6 space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-red-400 font-mono">⚠️ Danger Zone</h3>
+              <p className="text-xs text-gray-400">Permanently delete this space and all associated posts. This action is completely irreversible.</p>
+              <button
+                onClick={() => {
+                  if (confirm("Are you absolutely sure you want to DELETE this space permanently? All data and posts will be deleted!")) {
+                    deleteSpace(space.id);
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Delete Space Permanently
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
     </div>
   );
 }
@@ -2262,7 +3477,7 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
               <div className="flex items-center gap-2 text-gray-400">
                 <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
                 <span>
-                  <strong className="text-[var(--text-primary)]">{user.universityStatus}</strong> at {user.universityName} ({user.degree})
+                  <strong className="text-[var(--text-primary)]">{user.universityStatus}</strong> at {user.universityName} ({user.degree}){user.graduationYear ? ` • Class of ${user.graduationYear}` : ''}
                 </span>
               </div>
             )}

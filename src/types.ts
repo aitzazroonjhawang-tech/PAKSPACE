@@ -19,6 +19,7 @@ export interface User {
   website?: string;
   instagram?: string;
   linkedIn?: string;
+  graduationYear?: string; // Graduation year of student
   followersCount: number;
   followingCount: number;
   joinedAt: string;
@@ -27,8 +28,11 @@ export interface User {
 export interface Post {
   id: string;
   userId: string;
+  title?: string; // Optional: title of post
   content: string;
   imageUrl?: string;
+  imageUrls?: string[]; // Supporting multiple images
+  aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; // Aspect ratio select
   linkUrl?: string;
   linkTitle?: string;
   postType: 'text' | 'photo' | 'link' | 'question';
@@ -59,9 +63,15 @@ export interface Space {
   bannerUrl: string;
   logoUrl: string;
   members: string[]; // List of userIds
-  moderators: string[]; // List of userIds
+  moderators: string[]; // List of userIds (Admin / Mod etc)
   postsCount: number;
   createdAt: string;
+  ownerId?: string; // Creator automatically becomes Owner
+  admins?: string[]; // Admin role lists
+  category?: string; // Category field
+  privacy?: 'public' | 'private'; // Privacy field
+  pendingRequests?: string[]; // For private spaces: List of userIds requesting to join
+  pinnedAnnouncement?: string; // Pin announcements field
 }
 
 export interface Notification {
@@ -103,7 +113,7 @@ export interface Product {
   description: string;
   price: number;
   category: 'Books' | 'Electronics' | 'Hostel Items' | 'Furniture' | 'Study Material' | 'Other';
-  condition: 'New' | 'Like New' | 'Used';
+  condition: 'New' | 'Like New' | 'Good' | 'Fair' | 'Used';
   campusLocation: string;
   images: string[];
   createdAt: string;
