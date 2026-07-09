@@ -184,31 +184,31 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div id="onboarding-container" className="min-h-screen bg-[#080E21] text-[#E5E5E0] flex flex-col justify-center items-center p-6 relative overflow-hidden font-sans select-none">
+    <div id="onboarding-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] flex flex-col justify-center items-center p-6 relative overflow-hidden font-sans select-none">
       
       {/* Background ambient radial glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#1E3A8A]/[0.02] rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#047857]/[0.02] rounded-full filter blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[var(--brand-blue)]/[0.02] rounded-full filter blur-[100px] pointer-events-none" />
 
       {/* Progress Tracker Header */}
       <div className="w-full max-w-xl mb-8 flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
           <PakSpaceLogo size="sm" showText={false} />
-          <span className="text-sm font-bold tracking-tight text-white font-display">Customize Your Profile</span>
+          <span className="text-sm font-bold tracking-tight text-[var(--text-primary)] font-display">Customize Your Profile</span>
         </div>
         
         {/* Horizontal steps marker */}
-        <div className="flex items-center gap-2 bg-[#111827] border border-[#1E293B] px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono">
-          <span className={step === 1 ? 'text-[#047857] font-bold' : ''}>1. Photo</span>
+        <div className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-color)] px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono">
+          <span className={step === 1 ? 'text-[var(--brand-blue)] font-bold' : ''}>1. Photo</span>
           <span>•</span>
-          <span className={step === 2 ? 'text-[#047857] font-bold' : ''}>2. Profile</span>
+          <span className={step === 2 ? 'text-[var(--brand-blue)] font-bold' : ''}>2. Profile</span>
           <span>•</span>
-          <span className={step === 3 ? 'text-[#047857] font-bold' : ''}>3. Personalize</span>
+          <span className={step === 3 ? 'text-[var(--brand-blue)] font-bold' : ''}>3. Personalize</span>
         </div>
       </div>
 
       {/* Main Container Form Card */}
-      <div className="w-full max-w-xl bg-[#111827] border border-[#1E293B] rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 backdrop-blur-md">
+      <div className="w-full max-w-xl bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 backdrop-blur-md">
         
         {/* STEP 1: UPLOAD PROFILE PHOTO */}
         {step === 1 && (
@@ -218,13 +218,13 @@ export default function OnboardingPage() {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white font-display">Upload Profile Photo</h2>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Upload Profile Photo</h2>
               <p className="text-xs text-gray-400">Capture a live picture from your device camera or choose a photo from your gallery.</p>
             </div>
 
             {/* Profile Photo Preview Circle */}
             <div className="flex flex-col items-center justify-center py-4 space-y-4">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-[#047857] bg-black/40 shadow-xl flex items-center justify-center">
+              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-[var(--brand-blue)] bg-black/40 shadow-xl flex items-center justify-center">
                 {cameraActive ? (
                   <video 
                     ref={videoRef} 
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
                 )}
                 
                 {cameraActive && (
-                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#047857] text-white text-[8px] font-mono font-bold rounded-full uppercase animate-pulse select-none">
+                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-[var(--brand-blue)] text-white text-[8px] font-mono font-bold rounded-full uppercase animate-pulse select-none">
                     Live
                   </div>
                 )}
@@ -251,7 +251,7 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={capturePhoto}
-                      className="w-full py-2.5 px-4 bg-[#047857] hover:bg-[#059669] border border-[#1E293B] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
+                      className="w-full py-2.5 px-4 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
                     >
                       <Camera className="w-4 h-4" />
                       Capture Photo
@@ -259,7 +259,7 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={stopCamera}
-                      className="w-full py-2.5 px-4 bg-[#080E21] hover:bg-[#111827] text-gray-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-[#1E293B]"
+                      className="w-full py-2.5 px-4 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-[var(--border-color)]"
                     >
                       <VideoOff className="w-4 h-4" />
                       Cancel Camera
@@ -270,7 +270,7 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="w-full py-2.5 px-4 bg-[#047857] hover:bg-[#059669] border border-[#1E293B] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
+                      className="w-full py-2.5 px-4 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
                     >
                       <Camera className="w-4 h-4" />
                       Use Device Camera
@@ -278,9 +278,9 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-4 bg-[#080E21] hover:bg-[#111827] text-gray-200 border border-[#1E293B] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                      className="w-full py-2.5 px-4 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-200 border border-[var(--border-color)] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                     >
-                      <Upload className="w-4 h-4 text-[#047857]" />
+                      <Upload className="w-4 h-4 text-[var(--brand-blue)]" />
                       Upload From Gallery
                     </button>
                   </>
@@ -300,10 +300,10 @@ export default function OnboardingPage() {
             {/* Drag & Drop Hint */}
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border border-dashed border-[#1E293B] rounded-2xl p-6 text-center hover:bg-[#080E21] hover:border-[#047857]/50 cursor-pointer transition-all select-none font-mono"
+              className="border border-dashed border-[var(--border-color)] rounded-2xl p-6 text-center hover:bg-[var(--bg-app)] hover:border-[var(--brand-blue)]/50 cursor-pointer transition-all select-none font-mono"
             >
               <ImageIcon className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-              <p className="text-[11px] text-gray-400">Drag and drop profile images here, or <span className="text-[#047857] hover:underline">browse files</span></p>
+              <p className="text-[11px] text-gray-400">Drag and drop profile images here, or <span className="text-[var(--brand-blue)] hover:underline">browse files</span></p>
               <p className="text-[9px] text-gray-600 mt-1">PNG, JPG, or WEBP up to 3MB</p>
             </div>
 
@@ -312,7 +312,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-40 py-3.5 bg-[#047857] hover:bg-[#059669] border border-[#1E293B] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#047857]/10 text-xs cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full sm:w-40 py-3.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold rounded-xl transition-all shadow-lg shadow-[var(--brand-blue)]/10 text-xs cursor-pointer flex items-center justify-center gap-1.5"
               >
                 Continue Setup
                 <ArrowRight className="w-4 h-4" />
@@ -329,14 +329,14 @@ export default function OnboardingPage() {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white font-display">Complete profile details</h2>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Complete profile details</h2>
               <p className="text-xs text-gray-400 font-mono">Tell other students and creators who you are and where you study.</p>
             </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                     Display Name
                   </label>
                   <div className="relative">
@@ -346,14 +346,14 @@ export default function OnboardingPage() {
                       placeholder="e.g. Aitzaz Ahmed"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-650 text-white focus:bg-[#111827] transition-all"
+                      className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-650 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
                     />
                     <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                     Username
                   </label>
                   <input
@@ -362,14 +362,14 @@ export default function OnboardingPage() {
                     placeholder="e.g. aitzazahmed"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    className="w-full px-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-650 text-white focus:bg-[#111827] transition-all"
+                    className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-650 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                     University / Organization Name
                   </label>
                   <div className="relative">
@@ -379,14 +379,14 @@ export default function OnboardingPage() {
                       placeholder="e.g. NUST, Islamabad or Fast-NUCES"
                       value={affiliationName}
                       onChange={(e) => setAffiliationName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-655 text-white focus:bg-[#111827] transition-all"
+                      className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-655 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
                     />
                     <GraduationCap className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                     Degree / Study Program
                   </label>
                   <input
@@ -394,13 +394,13 @@ export default function OnboardingPage() {
                     placeholder="e.g. BS Computer Science"
                     value={degree}
                     onChange={(e) => setDegree(e.target.value)}
-                    className="w-full px-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-655 text-white focus:bg-[#111827] transition-all"
+                    className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-655 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                   Location (City)
                 </label>
                 <div className="relative">
@@ -410,14 +410,14 @@ export default function OnboardingPage() {
                     placeholder="e.g. Islamabad, Lahore, Karachi"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-655 text-white focus:bg-[#111827] transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-655 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all"
                   />
                   <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                   Short Bio
                 </label>
                 <textarea
@@ -425,7 +425,7 @@ export default function OnboardingPage() {
                   rows={3}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-4 py-3 border border-[#1E293B] rounded-xl bg-[#080E21] focus:outline-none focus:border-[#047857] text-xs placeholder:text-gray-655 text-white focus:bg-[#111827] transition-all resize-none"
+                  className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-[var(--bg-app)] focus:outline-none focus:border-[var(--brand-blue)] text-xs placeholder:text-gray-655 text-[var(--text-primary)] focus:bg-[var(--bg-surface)] transition-all resize-none"
                 />
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3 bg-[#080E21] hover:bg-[#111827] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[#1E293B] transition-colors"
+                className="px-5 py-3 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[var(--border-color)] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -444,7 +444,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={handleNext}
                 disabled={!name.trim() || !username.trim() || !affiliationName.trim() || !city.trim()}
-                className="px-6 py-3 bg-[#047857] hover:bg-[#059669] border border-[#1E293B] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[#047857]/10 transition-colors"
+                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[var(--brand-blue)]/10 transition-colors"
               >
                 Next Step
                 <ArrowRight className="w-4 h-4" />
@@ -461,14 +461,14 @@ export default function OnboardingPage() {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white font-display">Choose interests to personalize feed</h2>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Choose interests to personalize feed</h2>
               <p className="text-xs text-gray-400 font-mono">Personalize your feed by selecting topics of interest across Pakistan.</p>
             </div>
 
             <div className="space-y-5 text-left">
               {/* Grid of Interests */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                   Select Topics
                 </label>
                 <div className="flex flex-wrap gap-2.5">
@@ -481,8 +481,8 @@ export default function OnboardingPage() {
                         onClick={() => toggleInterest(interest)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
                           selected
-                            ? 'bg-[#047857] border-[#047857] text-white shadow-md shadow-[#047857]/20'
-                            : 'bg-[#080E21] border-[#1E293B] text-gray-400 hover:border-gray-500 hover:text-white'
+                            ? 'bg-[var(--brand-blue)] border-[var(--brand-blue)] text-white shadow-md shadow-[var(--brand-blue)]/20'
+                            : 'bg-[var(--bg-app)] border-[var(--border-color)] text-gray-400 hover:border-gray-500 hover:text-[var(--text-primary)]'
                         }`}
                       >
                         {interest}
@@ -494,42 +494,42 @@ export default function OnboardingPage() {
               </div>
 
               {/* Coordinates */}
-              <div className="space-y-3 pt-4 border-t border-[#1E293B]">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#047857] font-mono">
+              <div className="space-y-3 pt-4 border-t border-[var(--border-color)]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
                   Social Links (Optional)
                 </label>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 font-mono">
-                  <div className="flex items-center gap-2 px-3 bg-[#080E21] border border-[#1E293B] rounded-xl">
+                  <div className="flex items-center gap-2 px-3 bg-[var(--bg-app)] border border-[var(--border-color)] rounded-xl">
                     <Globe className="w-4 h-4 text-gray-600 shrink-0" />
                     <input
                       type="url"
                       placeholder="Personal Website URL"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
-                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-white placeholder:text-gray-655"
+                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-[var(--text-primary)] placeholder:text-gray-655"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 px-3 bg-[#080E21] border border-[#1E293B] rounded-xl">
+                  <div className="flex items-center gap-2 px-3 bg-[var(--bg-app)] border border-[var(--border-color)] rounded-xl">
                     <Instagram className="w-4 h-4 text-gray-600 shrink-0" />
                     <input
                       type="text"
                       placeholder="Instagram username"
                       value={instagram}
                       onChange={(e) => setInstagram(e.target.value)}
-                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-white placeholder:text-gray-655"
+                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-[var(--text-primary)] placeholder:text-gray-655"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 px-3 bg-[#080E21] border border-[#1E293B] rounded-xl col-span-1 sm:col-span-2">
+                  <div className="flex items-center gap-2 px-3 bg-[var(--bg-app)] border border-[var(--border-color)] rounded-xl col-span-1 sm:col-span-2">
                     <Linkedin className="w-4 h-4 text-gray-600 shrink-0" />
                     <input
                       type="text"
                       placeholder="LinkedIn Profile URL"
                       value={linkedin}
                       onChange={(e) => setLinkedin(e.target.value)}
-                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-white placeholder:text-gray-655"
+                      className="w-full py-2.5 bg-transparent focus:outline-none text-xs text-[var(--text-primary)] placeholder:text-gray-655"
                     />
                   </div>
                 </div>
@@ -541,7 +541,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3 bg-[#080E21] hover:bg-[#111827] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[#1E293B] transition-colors"
+                className="px-5 py-3 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[var(--border-color)] transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -550,9 +550,9 @@ export default function OnboardingPage() {
                 id="finish-onboarding-btn"
                 type="button"
                 onClick={handleFinish}
-                className="px-6 py-3 bg-[#047857] hover:bg-[#059669] border border-[#1E293B] text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[#047857]/10 transition-colors"
+                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[var(--brand-blue)]/10 transition-colors"
               >
-                <UserPlus className="w-4 h-4 text-white" />
+                <UserPlus className="w-4 h-4 text-[var(--text-primary)]" />
                 Complete Onboarding
               </button>
             </div>

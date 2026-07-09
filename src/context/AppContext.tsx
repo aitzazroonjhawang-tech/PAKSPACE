@@ -73,18 +73,26 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   // Load state from localStorage or seed
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // Clear old storage once for v2 clean platform experience
-    if (!localStorage.getItem('pakspace_v2_initialized')) {
+    // v3: wipe every demo/seed account, post, comment, space, notification and
+    // product that shipped in earlier builds so the live platform starts on a
+    // completely clean slate for real user registrations. This runs once per
+    // browser and also resets the theme default to light.
+    if (!localStorage.getItem('pakspace_v3_initialized')) {
       localStorage.removeItem('pakspace_users');
       localStorage.removeItem('pakspace_current_user');
       localStorage.removeItem('pakspace_posts');
       localStorage.removeItem('pakspace_comments');
       localStorage.removeItem('pakspace_spaces');
       localStorage.removeItem('pakspace_notifications');
-      localStorage.setItem('pakspace_v2_initialized', 'true');
+      localStorage.removeItem('pakspace_products');
+      localStorage.removeItem('pakspace_chat_threads');
+      localStorage.removeItem('pakspace_chat_messages');
+      localStorage.removeItem('pakspace_dark');
+      localStorage.setItem('pakspace_v3_initialized', 'true');
     }
     const saved = localStorage.getItem('pakspace_dark');
-    return saved ? saved === 'true' : true;
+    // Default theme is now the solid-yellow light mode.
+    return saved ? saved === 'true' : false;
   });
 
   const [users, setUsers] = useState<User[]>(() => {

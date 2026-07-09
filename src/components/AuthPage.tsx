@@ -195,18 +195,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div id="auth-container" className="min-h-screen bg-[#080E21] text-[#E5E5E0] flex flex-col justify-center items-center p-6 relative select-none overflow-hidden font-sans">
+    <div id="auth-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] flex flex-col justify-center items-center p-6 relative select-none overflow-hidden font-sans">
       
       {/* Background ambient radial glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/[0.04] rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/[0.03] rounded-full filter blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/[0.03] rounded-full filter blur-[100px] pointer-events-none" />
 
       {/* Back Button */}
       <div className="absolute top-6 left-6 z-10">
         <button
           id="back-to-landing-btn"
           onClick={() => setView('landing')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-semibold bg-[#111827] border border-[#1E293B] hover:border-gray-500 transition-all text-gray-400 hover:text-white cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-semibold bg-[var(--bg-surface)] border border-[var(--border-color)] hover:border-gray-500 transition-all text-gray-400 hover:text-[var(--text-primary)] cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Landing
@@ -218,12 +218,12 @@ export default function AuthPage() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-md bg-[#111827] border border-[#1E293B] rounded-3xl p-8 relative z-10 shadow-2xl backdrop-blur-md"
+        className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-8 relative z-10 shadow-2xl backdrop-blur-md"
       >
         {/* Brand logo at head of card */}
         <div className="flex flex-col items-center mb-6">
-          <PakSpaceLogo size="sm" showText={true} textClassName="text-xl mt-2 font-bold tracking-tight text-white" />
-          <h2 className="text-xl font-display font-bold text-white mt-4 tracking-tight">
+          <PakSpaceLogo size="sm" showText={true} textClassName="text-xl mt-2 font-bold tracking-tight text-[var(--text-primary)]" />
+          <h2 className="text-xl font-display font-bold text-[var(--text-primary)] mt-4 tracking-tight">
             {authMode === 'signup' ? 'Create your platform account' : 'Welcome back to PakSpace'}
           </h2>
           <p className="text-xs text-gray-500 mt-1 font-mono">
@@ -240,7 +240,7 @@ export default function AuthPage() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3.5 px-4 bg-[#080E21] hover:bg-[#111827] disabled:opacity-50 border border-[#1E293B] hover:border-gray-500 text-white font-semibold rounded-2xl transition-all text-xs flex items-center justify-center gap-2.5 cursor-pointer transform active:scale-98 font-mono"
+          className="w-full py-3.5 px-4 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] disabled:opacity-50 border border-[var(--border-color)] hover:border-gray-500 text-white font-semibold rounded-2xl transition-all text-xs flex items-center justify-center gap-2.5 cursor-pointer transform active:scale-98 font-mono"
         >
           {/* Google Colorized Icon G representation */}
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -254,9 +254,9 @@ export default function AuthPage() {
 
         {/* Divider */}
         <div className="flex items-center my-6">
-          <div className="flex-grow border-t border-[#1E293B]" />
+          <div className="flex-grow border-t border-[var(--border-color)]" />
           <span className="px-3.5 text-[9px] uppercase tracking-widest text-gray-500 font-bold font-mono">Or use email</span>
-          <div className="flex-grow border-t border-[#1E293B]" />
+          <div className="flex-grow border-t border-[var(--border-color)]" />
         </div>
 
         {/* Error notification */}
@@ -272,7 +272,7 @@ export default function AuthPage() {
           {authMode === 'signup' && (
             <>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-blue-400 font-mono">
                   Full Name
                 </label>
                 <div className="relative">
@@ -283,14 +283,14 @@ export default function AuthPage() {
                     placeholder="e.g. Aitzaz Ahmed"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-2xl bg-[#080E21] focus:outline-none focus:border-emerald-500 text-sm transition-all placeholder:text-gray-600 text-white focus:bg-[#111827]"
+                    className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-2xl bg-[var(--bg-app)] focus:outline-none focus:border-blue-500 text-sm transition-all placeholder:text-gray-600 text-[var(--text-primary)] focus:bg-[var(--bg-surface)]"
                   />
                   <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-blue-400 font-mono">
                   Username
                 </label>
                 <div className="relative">
@@ -301,7 +301,7 @@ export default function AuthPage() {
                     placeholder="e.g. aitzazahmed"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-2xl bg-[#080E21] focus:outline-none focus:border-emerald-500 text-sm transition-all placeholder:text-gray-600 text-white focus:bg-[#111827]"
+                    className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-2xl bg-[var(--bg-app)] focus:outline-none focus:border-blue-500 text-sm transition-all placeholder:text-gray-600 text-[var(--text-primary)] focus:bg-[var(--bg-surface)]"
                   />
                   <AtSign className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
                 </div>
@@ -310,7 +310,7 @@ export default function AuthPage() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-blue-400 font-mono">
               Email Address
             </label>
             <div className="relative">
@@ -321,14 +321,14 @@ export default function AuthPage() {
                 placeholder="e.g. student@university.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-2xl bg-[#080E21] focus:outline-none focus:border-emerald-500 text-sm transition-all placeholder:text-gray-600 text-white focus:bg-[#111827]"
+                className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-2xl bg-[var(--bg-app)] focus:outline-none focus:border-blue-500 text-sm transition-all placeholder:text-gray-600 text-[var(--text-primary)] focus:bg-[var(--bg-surface)]"
               />
               <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-blue-400 font-mono">
               Password
             </label>
             <div className="relative">
@@ -339,7 +339,7 @@ export default function AuthPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-[#1E293B] rounded-2xl bg-[#080E21] focus:outline-none focus:border-emerald-500 text-sm transition-all placeholder:text-gray-600 text-white focus:bg-[#111827]"
+                className="w-full pl-10 pr-4 py-3 border border-[var(--border-color)] rounded-2xl bg-[var(--bg-app)] focus:outline-none focus:border-blue-500 text-sm transition-all placeholder:text-gray-600 text-[var(--text-primary)] focus:bg-[var(--bg-surface)]"
               />
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-600" />
             </div>
@@ -350,7 +350,7 @@ export default function AuthPage() {
             id="auth-submit-btn"
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-emerald-750 hover:bg-emerald-650 border border-[#1E293B] disabled:opacity-50 text-white font-mono font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all text-sm transform active:scale-98 mt-3 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-blue-750 hover:bg-blue-650 border border-[var(--border-color)] disabled:opacity-50 text-white font-mono font-bold rounded-2xl shadow-lg shadow-blue-500/10 transition-all text-sm transform active:scale-98 mt-3 cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -361,13 +361,13 @@ export default function AuthPage() {
         </form>
 
         {/* Footer Toggle */}
-        <div className="mt-6 pt-5 border-t border-[#1E293B] text-center">
+        <div className="mt-6 pt-5 border-t border-[var(--border-color)] text-center">
           <p className="text-xs text-gray-500 font-mono">
             {authMode === 'signup' ? 'Already have an account?' : 'New to PakSpace?'}
             <button
               id="auth-toggle-mode-btn"
               onClick={toggleMode}
-              className="ml-1 text-emerald-400 font-mono font-bold hover:underline bg-transparent border-none cursor-pointer"
+              className="ml-1 text-blue-400 font-mono font-bold hover:underline bg-transparent border-none cursor-pointer"
             >
               {authMode === 'signup' ? 'Sign In' : 'Sign Up'}
             </button>

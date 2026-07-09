@@ -1,26 +1,64 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
   --font-serif: "Lora", "Georgia", serif;
   --font-display: "Lora", "Georgia", serif;
   --font-mono: "JetBrains Mono", monospace;
-  
-  --color-cream: #FCFBF7;
-  --color-charcoal: #191919;
-  --color-border-subtle: #EBEAE4;
-  --color-forest: #004D34;
-  --color-forest-hover: #003322;
+
+  --color-brand-yellow: #FFD400;
+  --color-brand-blue: #1440FF;
+  --color-charcoal: #14110B;
 }
 
-/* Custom premium styles matching Substack Editorial */
+/*
+  PakSpace theme system.
+  Light (default): solid brand-yellow surfaces everywhere, blue as the
+  single sharp contrasting accent (branding, links, CTAs).
+  Dark: deep navy surfaces (toggle lives in the user Settings menu).
+*/
+:root {
+  --bg-app: var(--color-brand-yellow);
+  --bg-surface: #FFCF00;
+  --bg-surface-2: #FFE04D;
+  --bg-elevated: #FFFFFF;
+  --border-color: #E6BE00;
+  --border-strong: #C9A600;
+  --text-primary: #14110B;
+  --text-secondary: #3A3120;
+  --text-muted: #6B5F3A;
+  --brand-blue: var(--color-brand-blue);
+  --brand-blue-hover: #0A2ECC;
+  --scrollbar-thumb: #E6BE00;
+  --scrollbar-thumb-hover: #C9A600;
+}
+
+.dark {
+  --bg-app: #080E21;
+  --bg-surface: #111827;
+  --bg-surface-2: #0c1020;
+  --bg-elevated: #1E293B;
+  --border-color: #1E293B;
+  --border-strong: #334155;
+  --text-primary: #F3F3EE;
+  --text-secondary: #C7CBD6;
+  --text-muted: #8B93A8;
+  --brand-blue: #3B82F6;
+  --brand-blue-hover: #2563EB;
+  --scrollbar-thumb: #1E293B;
+  --scrollbar-thumb-hover: #334155;
+}
+
+/* Custom premium styles */
 body {
   font-family: var(--font-sans);
-  background-color: #FCFBF7; /* Cream background */
-  color: #191919; /* Dark editorial text */
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Scrollbar customization */
@@ -32,33 +70,69 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #EBEAE4;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #D5D4CD;
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Glassmorphism/Card utility classes adapted for Substack warmth */
+/* Glassmorphism/Card utility classes */
 .glass-panel {
-  background: #FCFBF7;
-  border: 1px solid #EBEAE4;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
 }
 
 .glass-panel-light {
-  background: rgba(252, 251, 247, 0.85);
+  background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(235, 234, 228, 0.5);
+  border: 1px solid var(--border-color);
 }
 
 /* Subtle accent glows */
 .glow-accent {
-  box-shadow: 0 4px 20px -2px rgba(0, 77, 52, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(20, 64, 255, 0.08);
 }
 
 .glow-accent-blue {
-  box-shadow: 0 4px 20px -2px rgba(30, 58, 138, 0.03);
+  box-shadow: 0 4px 20px -2px rgba(20, 64, 255, 0.1);
+}
+
+/* Accessible toggle switch used in the Settings menu */
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--border-color);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.theme-switch[data-on="true"] {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+.theme-switch .theme-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.theme-switch[data-on="true"] .theme-switch-knob {
+  transform: translateX(20px);
 }
 
 /* Fade in animation */
