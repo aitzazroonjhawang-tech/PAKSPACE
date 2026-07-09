@@ -4,51 +4,50 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
-  --font-serif: "Lora", "Georgia", serif;
-  --font-display: "Lora", "Georgia", serif;
+  --font-serif: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --color-brand-yellow: #FFD400;
-  --color-brand-blue: #1440FF;
-  --color-charcoal: #14110B;
+  --color-brand-yellow: #FACC15;
+  --color-brand-blue: #3B82F6;
+  --color-charcoal: #1F2937;
 }
 
 /*
   PakSpace theme system.
-  Light (default): solid brand-yellow surfaces everywhere, blue as the
-  single sharp contrasting accent (branding, links, CTAs).
-  Dark: deep navy surfaces (toggle lives in the user Settings menu).
+  Light (default): Sky & Sand colors.
+  Dark: Deep Midnight Sky colors.
 */
 :root {
-  --bg-app: var(--color-brand-yellow);
-  --bg-surface: #FFCF00;
-  --bg-surface-2: #FFE04D;
+  --bg-app: #FAF7EE;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #F7F4EB;
   --bg-elevated: #FFFFFF;
-  --border-color: #E6BE00;
-  --border-strong: #C9A600;
-  --text-primary: #14110B;
-  --text-secondary: #3A3120;
-  --text-muted: #6B5F3A;
-  --brand-blue: var(--color-brand-blue);
-  --brand-blue-hover: #0A2ECC;
-  --scrollbar-thumb: #E6BE00;
-  --scrollbar-thumb-hover: #C9A600;
+  --border-color: #E5E7EB;
+  --border-strong: #D1D5DB;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --brand-blue: #3B82F6;
+  --brand-blue-hover: #2563EB;
+  --scrollbar-thumb: #E5E7EB;
+  --scrollbar-thumb-hover: #D1D5DB;
 }
 
 .dark {
-  --bg-app: #080E21;
-  --bg-surface: #111827;
-  --bg-surface-2: #0c1020;
+  --bg-app: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-surface-2: #1E293B;
   --bg-elevated: #1E293B;
-  --border-color: #1E293B;
-  --border-strong: #334155;
-  --text-primary: #F3F3EE;
-  --text-secondary: #C7CBD6;
-  --text-muted: #8B93A8;
+  --border-color: #334155;
+  --border-strong: #475569;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
   --brand-blue: #3B82F6;
-  --brand-blue-hover: #2563EB;
-  --scrollbar-thumb: #1E293B;
-  --scrollbar-thumb-hover: #334155;
+  --brand-blue-hover: #60A5FA;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
 }
 
 /* Custom premium styles */

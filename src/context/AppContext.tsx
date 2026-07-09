@@ -31,8 +31,8 @@ interface AppContextType {
   triggerToast: (msg: string) => void;
   
   // Auth actions
-  signUp: (name: string, username: string, email: string) => void;
-  signIn: (email: string) => boolean;
+  signUp: (name: string, username: string, email: string, password?: string) => void;
+  signIn: (email: string, password?: string) => boolean;
   finishOnboarding: (profileData: Partial<User>) => void;
   signOut: () => void;
   updateProfile: (profileData: Partial<User>) => void;
@@ -211,27 +211,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [chatMessages]);
 
   // Auth Operations
-  const signUp = (name: string, username: string, email: string) => {
-    // Check if user already exists
+  const getStoredPasswords = (): Record<string, string> => {
+    const saved = localStorage.getItem('pakspace_user_passwords');
+    return saved ? JSON.parse(saved) : {};
+  };
+
+  const saveStoredPassword = (email: string, password?: string) => {
+    if (!password) return;
+    const passwords = getStoredPasswords();
+    passwords[email.toLowerCase().trim()] = password;
+    localStorage.setItem('pakspace_user_passwords', JSON.stringify(passwords));
+  };
+
+  const signUp = (name: string, username: string, email: string, password?: string) => {
     const normalizedUsername = username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
-    const existing = users.find(u => u.username === normalizedUsername || u.email === email);
+    const normalizedEmail = email.toLowerCase().trim();
     
-    if (existing) {
-      setCurrentUser(existing);
-      if (!existing.universityStatus) {
-        setView('onboarding');
-      } else {
-        setView('app');
-        setAppTab('home');
-      }
-      return;
+    // Check if user already exists
+    const existingEmail = users.find(u => u.email.toLowerCase() === normalizedEmail);
+    if (existingEmail) {
+      throw new Error('An account with this email address already exists.');
+    }
+
+    const existingUsername = users.find(u => u.username === normalizedUsername);
+    if (existingUsername) {
+      throw new Error('This username is already taken. Please choose another.');
     }
 
     const newUser: User = {
       id: `user-${Date.now()}`,
       name,
       username: normalizedUsername,
-      email,
+      email: normalizedEmail,
       bio: '',
       avatarUrl: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
       coverUrl: `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80`,
@@ -245,14 +256,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       joinedAt: new Date().toISOString().split('T')[0]
     };
 
+    if (password) {
+      saveStoredPassword(normalizedEmail, password);
+    }
+
     setUsers(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
     setView('onboarding');
   };
 
-  const signIn = (email: string): boolean => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const signIn = (email: string, password?: string): boolean => {
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = users.find(u => u.email.toLowerCase() === normalizedEmail);
+    
     if (existing) {
+      const passwords = getStoredPasswords();
+      const storedPassword = passwords[normalizedEmail];
+      
+      // If there is a password stored, verify it.
+      if (storedPassword) {
+        if (storedPassword !== password) {
+          throw new Error('Incorrect password. Please try again.');
+        }
+      } else if (password) {
+        // If there's no password stored yet (e.g. legacy/seed user), set it on first login.
+        saveStoredPassword(normalizedEmail, password);
+      }
+      
       setCurrentUser(existing);
       if (!existing.universityStatus) {
         setView('onboarding');
@@ -262,11 +292,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true;
     }
-    // If not found, let's create a generic account so the user has frictionless experience
-    const mockName = email.split('@')[0];
-    const cleanName = mockName.charAt(0).toUpperCase() + mockName.slice(1);
-    signUp(cleanName, mockName, email);
-    return true;
+    
+    throw new Error('No account found with this email. Please sign up first.');
   };
 
   const finishOnboarding = (profileData: Partial<User>) => {
