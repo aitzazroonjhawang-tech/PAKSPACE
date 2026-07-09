@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-serif: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-display: "Geist", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-brand-yellow: #FACC15;
+  --color-brand-blue: #3B82F6;
+  --color-charcoal: #1F2937;
+}
+
+/*
+  PakSpace theme system.
+  Light (default): Sky & Sand colors.
+  Dark: Deep Midnight Sky colors.
+*/
+:root {
+  --bg-app: #FAF7EE;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #F7F4EB;
+  --bg-elevated: #FFFFFF;
+  --border-color: #E5E7EB;
+  --border-strong: #D1D5DB;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --brand-blue: #3B82F6;
+  --brand-blue-hover: #2563EB;
+  --scrollbar-thumb: #E5E7EB;
+  --scrollbar-thumb-hover: #D1D5DB;
+}
+
+.dark {
+  --bg-app: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-surface-2: #1E293B;
+  --bg-elevated: #1E293B;
+  --border-color: #334155;
+  --border-strong: #475569;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --brand-blue: #3B82F6;
+  --brand-blue-hover: #60A5FA;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+}
+
+/* Custom premium styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Glassmorphism/Card utility classes */
+.glass-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+
+.glass-panel-light {
+  background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+}
+
+/* Subtle accent glows */
+.glow-accent {
+  box-shadow: 0 4px 20px -2px rgba(20, 64, 255, 0.08);
+}
+
+.glow-accent-blue {
+  box-shadow: 0 4px 20px -2px rgba(20, 64, 255, 0.1);
+}
+
+/* Accessible toggle switch used in the Settings menu */
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--border-color);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.theme-switch[data-on="true"] {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+.theme-switch .theme-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.theme-switch[data-on="true"] .theme-switch-knob {
+  transform: translateX(20px);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+/* Rich Text & Post Content Rendering Stylings */
+.prose, .rich-text-content {
+  color: var(--text-primary);
+}
+
+.prose ul, .rich-text-content ul {
+  list-style-type: disc !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose ol, .rich-text-content ol {
+  list-style-type: decimal !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose blockquote, .rich-text-content blockquote {
+  border-left: 3px solid var(--brand-blue) !important;
+  padding-left: 1rem !important;
+  color: var(--text-secondary) !important;
+  font-style: italic !important;
+  margin: 1rem 0 !important;
+  background: color-mix(in srgb, var(--brand-blue) 4%, transparent);
+  border-radius: 4px;
+}
+
+.prose a, .rich-text-content a {
+  color: var(--brand-blue) !important;
+  text-decoration: underline !important;
+}
+
+.prose strong, .rich-text-content strong {
+  font-weight: 700 !important;
+  color: var(--text-primary);
+}
+
