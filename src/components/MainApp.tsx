@@ -79,15 +79,59 @@ export default function MainApp() {
   const [uploadProgressMap, setUploadProgressMap] = useState<Record<string, number>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
+  // Upload constraints for feed photos: reject anything unreasonably large,
+  // and downscale/compress everything else so the feed stays fast to load
+  // and scroll through (large phone-camera photos are often 4000px+ / 8MB+).
+  const MAX_UPLOAD_MB = 15;
+  const MAX_IMAGE_DIMENSION = 2000;
+  const JPEG_QUALITY = 0.82;
+
+  const resizeImageForFeed = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+            const scale = MAX_IMAGE_DIMENSION / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(reader.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          // Keep transparency for PNGs, otherwise compress to JPEG for a much smaller payload
+          const outputType = file.type === 'image/png' || file.type === 'image/gif' ? file.type : 'image/jpeg';
+          resolve(canvas.toDataURL(outputType, outputType === 'image/jpeg' ? JPEG_QUALITY : undefined));
+        };
+        img.onerror = () => resolve(reader.result as string);
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAddPhotos = (files: File[]) => {
     files.forEach(file => {
-      const reader = new FileReader();
+      if (!file.type.startsWith('image/')) return;
+
+      if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+        triggerToast(`"${file.name}" is over ${MAX_UPLOAD_MB}MB — please choose a smaller image.`);
+        return;
+      }
+
       const fileId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      
       setUploadProgressMap(prev => ({ ...prev, [fileId]: 10 }));
-      
-      reader.onloadend = () => {
-        const resultUrl = reader.result as string;
+
+      resizeImageForFeed(file).then(resultUrl => {
         let currentProgress = 10;
         const interval = setInterval(() => {
           currentProgress += Math.floor(Math.random() * 25) + 15;
@@ -105,41 +149,58 @@ export default function MainApp() {
           }
           setUploadProgressMap(prev => ({ ...prev, [fileId]: currentProgress }));
         }, 120);
-      };
-      reader.readAsDataURL(file);
+      }).catch(() => {
+        triggerToast(`Couldn't process "${file.name}". Try a different image.`);
+        setUploadProgressMap(prev => {
+          const updated = { ...prev };
+          delete updated[fileId];
+          return updated;
+        });
+      });
     });
   };
 
   const handleReplacePhoto = (idx: number, file: File) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      const fileId = `img-replace-${Date.now()}`;
-      setUploadProgressMap(prev => ({ ...prev, [fileId]: 20 }));
-      reader.onloadend = () => {
-        let currentProgress = 20;
-        const interval = setInterval(() => {
-          currentProgress += Math.floor(Math.random() * 30) + 15;
-          if (currentProgress >= 100) {
-            currentProgress = 100;
-            clearInterval(interval);
-            setNewPostImageUrls(prev => {
-              const updated = [...prev];
-              updated[idx] = reader.result as string;
+    if (!file || !file.type.startsWith('image/')) return;
+
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      triggerToast(`"${file.name}" is over ${MAX_UPLOAD_MB}MB — please choose a smaller image.`);
+      return;
+    }
+
+    const fileId = `img-replace-${Date.now()}`;
+    setUploadProgressMap(prev => ({ ...prev, [fileId]: 20 }));
+
+    resizeImageForFeed(file).then(resultUrl => {
+      let currentProgress = 20;
+      const interval = setInterval(() => {
+        currentProgress += Math.floor(Math.random() * 30) + 15;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          clearInterval(interval);
+          setNewPostImageUrls(prev => {
+            const updated = [...prev];
+            updated[idx] = resultUrl;
+            return updated;
+          });
+          setTimeout(() => {
+            setUploadProgressMap(prev => {
+              const updated = { ...prev };
+              delete updated[fileId];
               return updated;
             });
-            setTimeout(() => {
-              setUploadProgressMap(prev => {
-                const updated = { ...prev };
-                delete updated[fileId];
-                return updated;
-              });
-            }, 300);
-          }
-          setUploadProgressMap(prev => ({ ...prev, [fileId]: currentProgress }));
-        }, 100);
-      };
-      reader.readAsDataURL(file);
-    }
+          }, 300);
+        }
+        setUploadProgressMap(prev => ({ ...prev, [fileId]: currentProgress }));
+      }, 100);
+    }).catch(() => {
+      triggerToast(`Couldn't process "${file.name}". Try a different image.`);
+      setUploadProgressMap(prev => {
+        const updated = { ...prev };
+        delete updated[fileId];
+        return updated;
+      });
+    });
   };
 
   // Restore drafts on mount
@@ -189,11 +250,13 @@ export default function MainApp() {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
         if (file) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setNewPostImageUrls(prev => [...prev, reader.result as string]);
-          };
-          reader.readAsDataURL(file);
+          if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+            triggerToast(`Pasted image is over ${MAX_UPLOAD_MB}MB — please choose a smaller image.`);
+            continue;
+          }
+          resizeImageForFeed(file).then(resultUrl => {
+            setNewPostImageUrls(prev => [...prev, resultUrl]);
+          });
         }
       }
     }
@@ -1349,10 +1412,10 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
   const { currentUser, posts } = useApp();
   
   return (
-    <div className="max-w-[650px] mx-auto space-y-4 sm:space-y-6 animate-fade-in font-sans w-full">
+    <div className="max-w-[680px] mx-auto animate-fade-in font-sans w-full">
       <div 
         onClick={onCreateClick}
-        className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[var(--brand-blue)]/30 hover:bg-white/[0.04] transition-all select-none"
+        className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[var(--brand-blue)]/30 hover:bg-white/[0.04] transition-all select-none mb-8"
       >
         <img 
           src={currentUser?.avatarUrl} 
@@ -1363,7 +1426,7 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
         <span className="text-gray-400 text-xs font-medium">Share a campus update, ask a question, or help a fellow student...</span>
       </div>
 
-      <div className="space-y-4 text-left">
+      <div className="text-left">
         {posts.filter(p => !p.spaceId).length === 0 ? (
           <div className="text-center py-20 px-6 space-y-5 bg-white/[0.01] border border-white/[0.05] rounded-3xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-blue-600/[0.01] to-transparent pointer-events-none" />
@@ -2145,16 +2208,16 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
   };
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 md:p-6 text-left space-y-3 sm:space-y-4 shadow-xs hover:shadow-md hover:border-[var(--border-strong)]/40 hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
+    <div className="feed-post feed-divider py-6 sm:py-8 first:pt-0 text-left space-y-4 relative">
       {/* Visual Indicator for Live Preview mode */}
       {isPreview && (
-        <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 text-[9px] text-center font-bold text-blue-400 py-1 uppercase tracking-widest border-b border-blue-500/10 select-none">
+        <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 text-[9px] text-center font-bold text-blue-400 py-1 uppercase tracking-widest border-b border-blue-500/10 select-none rounded-t-lg -mt-2 mb-2">
           Live Interactive Preview
         </div>
       )}
 
       {/* Header section */}
-      <div className={`flex justify-between items-start select-none ${isPreview ? 'pt-4' : ''}`}>
+      <div className="flex justify-between items-start select-none">
         <div className="flex items-center space-x-3 min-w-0">
           <img 
             onClick={() => {
@@ -2166,39 +2229,34 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
             alt={post.isAnonymous ? 'Anonymous' : postAuthor.name} 
             loading="lazy"
             decoding="async"
-            className={`w-10 h-10 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
+            className={`w-9 h-9 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
             referrerPolicy="no-referrer"
           />
           <div className="min-w-0">
-            {/* Display name, Username, University, and timestamp in one single clean row */}
-            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-left min-w-0">
-              <span 
-                onClick={() => {
-                  if (isPreview || post.isAnonymous) return;
-                  setActiveUserId(postAuthor.id);
-                  if (onBack) onBack();
-                }}
-                className={`font-bold text-[var(--text-primary)] text-[14px] leading-tight shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
-              >
-                {post.isAnonymous ? (post.anonymousName || 'Anonymous Student') : postAuthor.name}
-              </span>
-              <span className="text-gray-500 font-medium text-[11px] shrink-0">
-                {post.isAnonymous ? '@anonymous' : `@${postAuthor.username}`}
-              </span>
-              
+            <span 
+              onClick={() => {
+                if (isPreview || post.isAnonymous) return;
+                setActiveUserId(postAuthor.id);
+                if (onBack) onBack();
+              }}
+              className={`font-sans font-bold text-[var(--text-primary)] text-[14px] leading-tight block ${isPreview || post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+            >
+              {post.isAnonymous ? (post.anonymousName || 'Anonymous Student') : postAuthor.name}
+            </span>
+            {/* Substack-style small-caps byline: university/anon badge · timestamp */}
+            <div className="feed-byline flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 min-w-0">
               {post.isAnonymous ? (
-                <span className="text-[8px] bg-red-950/20 border border-red-900/30 text-red-400 px-1.5 py-0.5 rounded font-mono leading-none flex items-center gap-0.5 shrink-0">
+                <span className="text-red-400 flex items-center gap-0.5 shrink-0 normal-case tracking-normal font-mono text-[9px]">
                   <Lock className="w-2.5 h-2.5 shrink-0" />
                   ANONYMOUS
                 </span>
               ) : postAuthor.universityName ? (
-                <span className="text-[10px] bg-white/5 border border-[var(--border-color)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded-md font-medium leading-none truncate max-w-[140px] shrink-0">
+                <span className="truncate max-w-[160px] shrink-0">
                   {postAuthor.universityName.split(',')[0]}
                 </span>
               ) : null}
-
-              <span className="text-gray-400 text-[10px] shrink-0 select-none">•</span>
-              <span className="text-gray-500 text-[11px] shrink-0">
+              <span className="text-gray-400 shrink-0 select-none normal-case">•</span>
+              <span className="shrink-0">
                 {formatTime(post.createdAt)}
               </span>
             </div>
@@ -2253,40 +2311,43 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
       </div>
 
       {/* Post body content */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {post.title && (
-          <h2 className="text-lg font-bold text-[var(--text-primary)] leading-snug tracking-tight font-sans">
+          <h2 className="feed-title text-[21px] sm:text-[26px]">
             {post.title}
           </h2>
         )}
 
-        {post.content.startsWith('<') || post.content.includes('</') ? (
-          <div 
-            className="rich-text-content text-[14px] sm:text-[15px] text-[var(--text-primary)] leading-relaxed font-sans prose dark:prose-invert max-w-none break-words"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-        ) : (
-          <p className="text-[14px] sm:text-[15px] text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap font-sans break-words">{post.content}</p>
-        )}
-        
-        {/* Photos display: one image at a time, Instagram-style swipe */}
+        {/* Photos display: full-bleed banner above the text, Substack-style,
+            with an Instagram-style swipe when there's more than one image */}
         {post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0 ? (
           <ImageCarousel
             images={post.imageUrls}
-            fit="contain"
-            maxHeight="400px"
+            fit="cover"
+            rounded="rounded-xl"
+            aspectClassName="aspect-[16/9]"
             onImageClick={(url) => setLightboxUrl(url)}
             showCounter={post.imageUrls.length > 1}
           />
         ) : post.imageUrl ? (
           <ImageCarousel
             images={[post.imageUrl]}
-            fit="contain"
-            maxHeight="400px"
+            fit="cover"
+            rounded="rounded-xl"
+            aspectClassName="aspect-[16/9]"
             onImageClick={(url) => setLightboxUrl(url)}
             showDots={false}
           />
         ) : null}
+
+        {post.content.startsWith('<') || post.content.includes('</') ? (
+          <div 
+            className="feed-body rich-text-content prose dark:prose-invert max-w-none break-words"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        ) : (
+          <p className="feed-body whitespace-pre-wrap break-words">{post.content}</p>
+        )}
 
         {/* Link attachments */}
         {post.linkUrl && (
