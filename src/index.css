@@ -189,3 +189,54 @@ body {
   color: var(--text-primary);
 }
 
+
+/* Hide scrollbars for horizontally-scrolling chip rows / thumbnail strips */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe-area helpers for notches / home indicators on mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Prevent horizontal overflow anywhere on mobile — belt & suspenders */
+@media (max-width: 767px) {
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}
+
+/* Composer code block styling */
+.prose pre, .rich-text-content pre {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.8rem !important;
+  overflow-x: auto !important;
+  margin: 0.75rem 0 !important;
+}
+
+.prose h3, .rich-text-content h3 {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  margin: 0.75rem 0 0.4rem !important;
+  color: var(--text-primary) !important;
+}
+
+/* Composer inserted images render inline, full width, rounded */
+.rich-text-content img {
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+}

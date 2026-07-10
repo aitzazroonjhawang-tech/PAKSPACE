@@ -11,13 +11,16 @@ import {
   Heart, MessageSquare, Bookmark, Share2, Globe, Instagram, Linkedin,
   LogOut, Moon, Sun, ArrowLeft, Check, Compass as CompassIcon, 
   MapPin, GraduationCap, X, Calendar, ArrowRight, ExternalLink, Key, Sparkles,
-  ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings, GripVertical, RefreshCw
+  ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings, GripVertical, RefreshCw,
+  CircleHelp, Info
 } from 'lucide-react';
 import { Post, Space, User, Scholarship, University, Comment } from '../types';
 import PakSpaceLogo from './Logo';
 import { MarketplaceView } from './MarketplaceView';
 import UniversityDropdown from './UniversityDropdown';
 import { RichTextEditor } from './RichTextEditor';
+import { ImageCarousel } from './ImageCarousel';
+import { CreatePostComposer } from './CreatePostComposer';
 
 export default function MainApp() {
   const {
@@ -311,13 +314,17 @@ export default function MainApp() {
 
     setIsPublishing(true);
 
+    // The composer is a single unified writing surface now — the post type
+    // is derived automatically from whether images were attached.
+    const effectiveType: 'text' | 'photo' | 'link' | 'question' = newPostImageUrls.length > 0 ? 'photo' : newPostType;
+
     // Simulated premium publishing lag
     setTimeout(() => {
-      addPost(newPostContent, newPostType, {
+      addPost(newPostContent, effectiveType, {
         title: newPostTitle || undefined,
-        imageUrl: newPostType === 'photo' ? (newPostImageUrls[0] || undefined) : undefined,
-        imageUrls: newPostType === 'photo' ? newPostImageUrls : undefined,
-        aspectRatio: newPostType === 'photo' ? newPostAspectRatio : undefined,
+        imageUrl: effectiveType === 'photo' ? (newPostImageUrls[0] || undefined) : undefined,
+        imageUrls: effectiveType === 'photo' ? newPostImageUrls : undefined,
+        aspectRatio: effectiveType === 'photo' ? newPostAspectRatio : undefined,
         linkUrl: newPostType === 'link' ? newPostLinkUrl : undefined,
         linkTitle: newPostType === 'link' ? newPostLinkTitle : undefined,
         spaceId: newPostSpaceId || activeSpaceId || undefined,
@@ -407,7 +414,7 @@ export default function MainApp() {
   ];
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] transition-colors duration-300 pb-20 md:pb-0 flex selection:bg-[var(--brand-blue)]/30 selection:text-blue-200 font-sans">
+    <div id="app-root-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] transition-colors duration-300 pb-24 md:pb-0 flex selection:bg-[var(--brand-blue)]/30 selection:text-blue-200 font-sans">
       
       {/* DESKTOP SIDEBAR NAVIGATION */}
       <aside className="hidden md:flex flex-col justify-between w-64 border-r border-[var(--border-color)] bg-[var(--bg-app)] p-6 h-screen sticky top-0 shrink-0 z-40 select-none backdrop-blur-md">
@@ -603,23 +610,49 @@ export default function MainApp() {
                   </button>
                 </div>
 
-                <nav className="space-y-2">
-                  {navItems.map((item) => {
+                <nav className="space-y-1.5">
+                  {/* Secondary pages only — primary tabs already live in the bottom nav */}
+                  {[
+                    {
+                      id: 'notifications', label: 'Notifications', icon: Bell,
+                      badge: notifications.filter(n => !n.read && n.recipientId === currentUser.id).length,
+                      onClick: () => {
+                        setAppTab('notifications');
+                        setActiveSpaceId(null);
+                        setActiveUserId(null);
+                        setActivePostId(null);
+                        markAllNotificationsAsRead();
+                      }
+                    },
+                    {
+                      id: 'search', label: 'Search', icon: Search,
+                      onClick: () => {
+                        setAppTab('explore');
+                        setActiveSpaceId(null);
+                        setActiveUserId(null);
+                        setActivePostId(null);
+                        setTimeout(() => document.getElementById('global-search-input')?.focus(), 150);
+                      }
+                    },
+                    {
+                      id: 'saved', label: 'Saved Posts', icon: Bookmark,
+                      onClick: () => {
+                        setActiveUserId(currentUser.id);
+                        setAppTab('profile');
+                        setActiveSpaceId(null);
+                        setActivePostId(null);
+                      }
+                    },
+                    { id: 'settings', label: 'Settings', icon: Settings, onClick: () => setIsSettingsOpen(true) },
+                    { id: 'help', label: 'Help & Support', icon: CircleHelp, onClick: () => triggerToast('Help & Support: reach us anytime at support@pakspace.pk 💬') },
+                    { id: 'about', label: 'About PakSpace', icon: Info, onClick: () => triggerToast('PakSpace — the campus network built for university students across Pakistan. 🇵🇰') }
+                  ].map((item) => {
                     const Icon = item.icon;
-                    const isActive = appTab === item.id && !activeSpaceId && !activeUserId;
+                    const isActive = item.id !== 'search' && item.id !== 'saved' && item.id !== 'help' && item.id !== 'about' && appTab === item.id && !activeSpaceId && !activeUserId;
                     return (
                       <button
                         key={item.id}
-                        onClick={() => {
-                          setAppTab(item.id as any);
-                          setActiveSpaceId(null);
-                          setActiveUserId(null);
-                          setActivePostId(null);
-                          if (item.id === 'notifications') {
-                            markAllNotificationsAsRead();
-                          }
-                          setIsMobileMenuOpen(false);
-                        }}
+                        onClick={() => { item.onClick(); setIsMobileMenuOpen(false); }}
                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                           isActive 
                             ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-500' 
@@ -630,7 +663,7 @@ export default function MainApp() {
                           <Icon className="w-5 h-5" />
                           <span>{item.label}</span>
                         </div>
-                        {item.badge ? (
+                        {'badge' in item && item.badge ? (
                           <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                             {item.badge}
                           </span>
@@ -667,16 +700,64 @@ export default function MainApp() {
         )}
       </AnimatePresence>
 
-      {/* MOBILE FLOATING CREATE BUTTON */}
-      <div className="md:hidden fixed bottom-20 right-4 z-40">
-        <button
-          id="mobile-floating-create-btn"
-          onClick={() => setIsCreatePostOpen(true)}
-          className="w-12 h-12 rounded-full bg-[var(--brand-blue)] text-white shadow-lg shadow-blue-950/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      </div>
+      {/* MOBILE BOTTOM NAVIGATION — fixed, Instagram/Threads style */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-app)]/95 backdrop-blur-lg border-t border-[var(--border-color)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex items-stretch justify-between px-0.5">
+          {[
+            { id: 'home', label: 'Home', icon: Home },
+            { id: 'spaces', label: 'Spaces', icon: Users },
+            { id: 'messages', label: 'Messages', icon: MessageSquare },
+            { id: 'create', label: 'Create', icon: Plus },
+            { id: 'market', label: 'Marketplace', icon: ShoppingBag },
+            { id: 'profile', label: 'Profile', icon: UserIcon }
+          ].map((item) => {
+            const Icon = item.icon;
+            if (item.id === 'create') {
+              return (
+                <button
+                  key={item.id}
+                  id="mobile-bottomnav-create-btn"
+                  onClick={() => setIsCreatePostOpen(true)}
+                  className="flex-1 flex flex-col items-center justify-center gap-1 py-2 cursor-pointer group min-w-0"
+                >
+                  <span className="w-10 h-10 -mt-4 rounded-2xl bg-[var(--brand-blue)] text-white shadow-lg shadow-blue-950/30 flex items-center justify-center transition-transform group-active:scale-90">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <span className="text-[9px] font-semibold text-gray-400">Create</span>
+                </button>
+              );
+            }
+
+            const isActive = appTab === item.id && !activeSpaceId && !activeUserId;
+            const isProfileActive = item.id === 'profile' && appTab === 'profile' && (!activeUserId || activeUserId === currentUser.id);
+            const active = isActive || isProfileActive;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setAppTab(item.id as any);
+                  setActiveSpaceId(null);
+                  setActiveUserId(null);
+                  setActivePostId(null);
+                }}
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 cursor-pointer transition-all active:scale-95 min-w-0"
+              >
+                <Icon
+                  className={`w-5 h-5 ${active ? 'text-[var(--brand-blue)]' : 'text-gray-400'}`}
+                  strokeWidth={active ? 2.4 : 2}
+                />
+                <span className={`text-[9px] font-semibold truncate ${active ? 'text-[var(--brand-blue)]' : 'text-gray-400'}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* TOAST FEEDBACK PANEL */}
       <AnimatePresence>
@@ -768,450 +849,42 @@ export default function MainApp() {
 
       {/* DIALOGS AND MODALS PANEL */}
       
-      {/* A. CREATE POST DIALOG */}
+      {/* A. CREATE POST DIALOG — premium composer (Substack/Notion inspired) */}
       <AnimatePresence>
         {isCreatePostOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 md:flex md:items-center md:justify-center md:p-4 z-50 backdrop-blur-xs overflow-y-auto">
             <motion.div
-              initial={{ opacity: 0, scale: 0.98, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: 10 }}
-              className="w-full max-w-5xl bg-[var(--bg-surface-2)] border border-[var(--border-color)] rounded-3xl p-6 md:p-8 shadow-2xl relative space-y-6 my-8"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              className="w-full h-full md:h-auto"
             >
-              {/* Header */}
-              <div className="flex justify-between items-center pb-4 border-b border-[var(--border-color)]">
-                <div className="space-y-1 text-left">
-                  <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2 font-display">
-                    <Plus className="w-5 h-5 text-blue-500" />
-                    Compose Premium Post
-                  </h3>
-                  <p className="text-xs text-gray-500">Publish beautiful editorial content directly to PakSpace.</p>
-                </div>
-                <button
-                  onClick={() => setIsCreatePostOpen(false)}
-                  className="p-1.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Grid content */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* Left Side: Composer Form (lg:col-span-7) */}
-                <form onSubmit={handlePostSubmit} className="lg:col-span-7 space-y-5 text-left">
-                  
-                  {/* Select Type */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post Style</label>
-                    <div className="flex flex-wrap gap-2">
-                      {(['text', 'photo', 'link', 'question'] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => setNewPostType(type)}
-                          className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize border transition-all cursor-pointer ${
-                            newPostType === type
-                              ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                              : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-[var(--text-primary)]'
-                          }`}
-                        >
-                          {type === 'photo' ? 'Photo Story' : type === 'link' ? 'Article/Link' : type}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Select Space */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Publish Inside Space</label>
-                    <select
-                      value={newPostSpaceId}
-                      onChange={(e) => setNewPostSpaceId(e.target.value)}
-                      className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all cursor-pointer"
-                    >
-                      <option value="">No Space (General Campus Feed)</option>
-                      {spaces.map(s => (
-                        <option key={s.id} value={s.id} className="bg-[var(--bg-surface-2)]">{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Optional Title */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post Title (Optional)</label>
-                    <input
-                      type="text"
-                      placeholder="Give your thoughts a premium editorial title..."
-                      value={newPostTitle}
-                      onChange={(e) => setNewPostTitle(e.target.value)}
-                      className="w-full px-4 py-3 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-sm focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all placeholder:text-gray-500"
-                    />
-                  </div>
-
-                  {/* Caption & Content: Rich Text Editor */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Content & Story</label>
-                    <RichTextEditor
-                      value={newPostContent}
-                      onChange={setNewPostContent}
-                      placeholder={
-                        newPostType === 'question' 
-                          ? "What is your question? E.g., What is the merit list cutoff for SE in NUST?" 
-                          : "Express yourself. Double click text to format. Type bullet lists, quotes, or links..."
-                      }
-                      maxCharacters={2000}
-                    />
-                  </div>
-
-                  {/* Photo Specific Section */}
-                  {newPostType === 'photo' && (
-                    <div className="space-y-5 animate-fade-in">
-                      {/* Aspect Ratio Selector */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Choose Media Aspect Ratio</label>
-                        <div className="flex flex-wrap gap-2">
-                          {(['1:1', '4:5', '16:9', 'original'] as const).map((ratio) => (
-                            <button
-                              key={ratio}
-                              type="button"
-                              onClick={() => setNewPostAspectRatio(ratio)}
-                              className={`flex-1 min-w-[70px] px-3 py-2 rounded-xl text-[10px] font-bold uppercase border transition-all cursor-pointer ${
-                                newPostAspectRatio === ratio
-                                  ? 'bg-blue-600/10 border-blue-500 text-blue-400'
-                                  : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                              }`}
-                            >
-                              {ratio === '16:9' ? 'Landscape' : ratio === '1:1' ? 'Square' : ratio === '4:5' ? 'Portrait' : 'Original'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Drag & Drop Zone */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Upload Gallery Images</label>
-                        <div
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            const files = Array.from(e.dataTransfer.files) as File[];
-                            const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                            if (imageFiles.length > 0) {
-                              handleAddPhotos(imageFiles);
-                            }
-                          }}
-                          className="border-2 border-dashed border-[var(--border-color)] hover:border-blue-500/50 rounded-2xl p-6 text-center transition-all bg-white/[0.01] hover:bg-white/[0.03] cursor-pointer"
-                          onClick={() => {
-                            const fileInput = document.getElementById('post-image-input');
-                            if (fileInput) fileInput.click();
-                          }}
-                        >
-                          <div className="flex flex-col items-center gap-2">
-                            <Upload className="w-6 h-6 text-blue-500 animate-pulse" />
-                            <p className="text-xs font-bold text-[var(--text-primary)]">Drag & Drop photos here, or click to browse</p>
-                            <p className="text-[10px] text-gray-500">Supports multiple files. Or paste images with Ctrl+V directly inside editor.</p>
-                          </div>
-                          <input
-                            id="post-image-input"
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => {
-                              const files = Array.from(e.target.files || []) as File[];
-                              const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                              if (imageFiles.length > 0) {
-                                handleAddPhotos(imageFiles);
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Active Uploading States */}
-                      {Object.keys(uploadProgressMap).length > 0 && (
-                        <div className="space-y-2">
-                          {Object.entries(uploadProgressMap).map(([id, progress]) => (
-                            <div key={id} className="p-3 bg-white/5 rounded-xl border border-[var(--border-color)] flex items-center justify-between gap-3 animate-fade-in">
-                              <div className="flex items-center gap-2">
-                                <Upload className="w-4 h-4 text-blue-400 animate-bounce" />
-                                <span className="text-[10px] text-gray-400 font-mono">Uploading media asset...</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                  <div className="h-full bg-blue-500 transition-all duration-150" style={{ width: `${progress}%` }} />
-                                </div>
-                                <span className="text-[9px] font-mono font-bold text-blue-400">{progress}%</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Image Preview List with Move/Reorder & Remove */}
-                      {newPostImageUrls.length > 0 && (
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Uploaded Gallery ({newPostImageUrls.length}) — Drag to Reorder</label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {newPostImageUrls.map((url, idx) => (
-                              <div 
-                                key={idx} 
-                                draggable
-                                onDragStart={() => setDraggedIdx(idx)}
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={() => {
-                                  if (draggedIdx !== null && draggedIdx !== idx) {
-                                    const reordered = [...newPostImageUrls];
-                                    const [draggedItem] = reordered.splice(draggedIdx, 1);
-                                    reordered.splice(idx, 0, draggedItem);
-                                    setNewPostImageUrls(reordered);
-                                  }
-                                  setDraggedIdx(null);
-                                }}
-                                onDragEnd={() => setDraggedIdx(null)}
-                                className={`relative aspect-square rounded-xl overflow-hidden border border-[var(--border-color)] bg-white/5 group transition-all duration-150 ${draggedIdx === idx ? 'opacity-40 scale-95' : ''}`}
-                              >
-                                <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                                
-                                {/* Drag handle / Grip on hover */}
-                                <div className="absolute top-1 left-1 bg-black/60 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-                                  <GripVertical className="w-3.5 h-3.5 text-white" />
-                                </div>
-
-                                {/* Replace Photo on Hover */}
-                                <div className="absolute top-1 right-8 bg-black/60 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-blue-600 transition-colors">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      document.getElementById(`replace-photo-input-${idx}`)?.click();
-                                    }}
-                                    className="p-0 border-none bg-transparent cursor-pointer flex items-center text-white"
-                                    title="Replace Image"
-                                  >
-                                    <RefreshCw className="w-3.5 h-3.5" />
-                                  </button>
-                                  <input
-                                    id={`replace-photo-input-${idx}`}
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        handleReplacePhoto(idx, file);
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Overlay Shift Controls (Manual fallback buttons) */}
-                                <div className="absolute inset-x-0 bottom-0 bg-black/85 p-1 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    type="button"
-                                    disabled={idx === 0}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (idx > 0) {
-                                        const reordered = [...newPostImageUrls];
-                                        const temp = reordered[idx];
-                                        reordered[idx] = reordered[idx - 1];
-                                        reordered[idx - 1] = temp;
-                                        setNewPostImageUrls(reordered);
-                                      }
-                                    }}
-                                    className="p-1 text-gray-400 hover:text-white disabled:opacity-30 cursor-pointer text-xs font-bold font-sans"
-                                    title="Move Left"
-                                  >
-                                    ←
-                                  </button>
-                                  <span className="text-[8px] font-mono font-bold text-gray-300">Pos {idx + 1}</span>
-                                  <button
-                                    type="button"
-                                    disabled={idx === newPostImageUrls.length - 1}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (idx < newPostImageUrls.length - 1) {
-                                        const reordered = [...newPostImageUrls];
-                                        const temp = reordered[idx];
-                                        reordered[idx] = reordered[idx + 1];
-                                        reordered[idx + 1] = temp;
-                                        setNewPostImageUrls(reordered);
-                                      }
-                                    }}
-                                    className="p-1 text-gray-400 hover:text-white disabled:opacity-30 cursor-pointer text-xs font-bold font-sans"
-                                    title="Move Right"
-                                  >
-                                    →
-                                  </button>
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setNewPostImageUrls(prev => prev.filter((_, i) => i !== idx));
-                                  }}
-                                  className="absolute top-1 right-1 bg-black/80 hover:bg-red-600 text-white rounded-full p-1 cursor-pointer transition-colors"
-                                  title="Remove Image"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Link Details */}
-                  {newPostType === 'link' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link URL</label>
-                        <input
-                          type="url"
-                          placeholder="https://hec.gov.pk/..."
-                          value={newPostLinkUrl}
-                          onChange={(e) => setNewPostLinkUrl(e.target.value)}
-                          className="w-full px-4 py-2.5 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Link Display Title</label>
-                        <input
-                          type="text"
-                          placeholder="HEC Portal Guide"
-                          value={newPostLinkTitle}
-                          onChange={(e) => setNewPostLinkTitle(e.target.value)}
-                          className="w-full px-4 py-2.5 border border-[var(--border-color)] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Post As Segmented Toggle */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 block">Post As</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPostAnonymously(false)}
-                        className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                          !postAnonymously
-                            ? 'bg-blue-600/10 border-blue-500/50 shadow-sm shadow-blue-500/5'
-                            : 'bg-white/[0.01] border-[var(--border-color)] hover:bg-white/[0.03]'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          !postAnonymously ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-500'
-                        }`}>
-                          {!postAnonymously && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold text-[var(--text-primary)] block truncate">My Public Profile</span>
-                          <span className="text-[9px] text-gray-500 block truncate">Share as {currentUser.name}</span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPostAnonymously(true)}
-                        className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                          postAnonymously
-                            ? 'bg-blue-600/10 border-blue-500/50 shadow-sm shadow-blue-500/5'
-                            : 'bg-white/[0.01] border-[var(--border-color)] hover:bg-white/[0.03]'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          postAnonymously ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-500'
-                        }`}>
-                          {postAnonymously && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold text-[var(--text-primary)] block truncate">Anonymous Student</span>
-                          <span className="text-[9px] text-gray-500 block truncate">Hide name, degree, and university</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm('Discard your draft?')) {
-                          setNewPostTitle('');
-                          setNewPostContent('');
-                          setNewPostType('text');
-                          setNewPostImageUrls([]);
-                          setNewPostLinkUrl('');
-                          setNewPostLinkTitle('');
-                          setPostAnonymously(false);
-                          setIsCreatePostOpen(false);
-                          localStorage.removeItem('pakspace_draft_title');
-                          localStorage.removeItem('pakspace_draft_content');
-                        }
-                      }}
-                      className="px-5 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-[var(--text-primary)] rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isPublishing || (!newPostContent.trim() && newPostImageUrls.length === 0 && !newPostLinkUrl.trim())}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/40 disabled:text-gray-500 border-none text-white font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-blue-500/15"
-                    >
-                      {isPublishing ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Publishing...
-                        </>
-                      ) : (
-                        'Publish Post'
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Right Side: Live Editorial Preview (lg:col-span-5) */}
-                <div className="lg:col-span-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Live Editorial Preview</span>
-                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-mono px-2 py-0.5 rounded-full uppercase font-bold animate-pulse">Updates Instantly</span>
-                  </div>
-                  <div className="border border-[var(--border-color)] rounded-2xl p-0.5 bg-white/[0.01]">
-                    <PostCard 
-                      post={{
-                        id: 'preview',
-                        userId: currentUser.id,
-                        title: newPostTitle || undefined,
-                        content: newPostContent || 'What’s happening on your campus? Type in the editor to preview...',
-                        imageUrl: newPostType === 'photo' ? (newPostImageUrls[0] || undefined) : undefined,
-                        imageUrls: newPostType === 'photo' ? newPostImageUrls : undefined,
-                        aspectRatio: newPostAspectRatio,
-                        linkUrl: newPostType === 'link' ? (newPostLinkUrl || undefined) : undefined,
-                        linkTitle: newPostType === 'link' ? (newPostLinkTitle || undefined) : undefined,
-                        postType: newPostType,
-                        likes: [],
-                        bookmarks: [],
-                        commentsCount: 0,
-                        createdAt: new Date().toISOString(),
-                        spaceId: newPostSpaceId || undefined,
-                        isAnonymous: postAnonymously,
-                        anonymousName: 'Anonymous Student'
-                      }}
-                      isPreview={true}
-                    />
-                  </div>
-                </div>
-              </div>
+              <CreatePostComposer
+                currentUser={currentUser}
+                spaces={spaces}
+                content={newPostContent}
+                onChangeContent={setNewPostContent}
+                imageUrls={newPostImageUrls}
+                onAddPhotos={handleAddPhotos}
+                onReplacePhoto={handleReplacePhoto}
+                onRemovePhoto={(idx) => setNewPostImageUrls(prev => prev.filter((_, i) => i !== idx))}
+                onReorderPhotos={(urls) => setNewPostImageUrls(urls)}
+                uploadProgressMap={uploadProgressMap}
+                aspectRatio={newPostAspectRatio}
+                onChangeAspectRatio={setNewPostAspectRatio}
+                anonymous={postAnonymously}
+                onChangeAnonymous={setPostAnonymously}
+                spaceId={newPostSpaceId}
+                onChangeSpaceId={setNewPostSpaceId}
+                isPublishing={isPublishing}
+                onSubmit={handlePostSubmit}
+                onClose={() => setIsCreatePostOpen(false)}
+              />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
 
       {/* B. CREATE SPACE DIALOG */}
       <AnimatePresence>
@@ -1947,11 +1620,14 @@ function MessagesInboxView() {
         <p className="text-xs text-gray-450 mt-0.5">Connect and coordinate directly with peers and creators across Pakistan.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[480px] border border-white/[0.06] rounded-3xl bg-white/[0.01] overflow-hidden">
-        {/* Left Side: Users List */}
-        <div className="md:col-span-5 border-r border-white/[0.06] p-4 space-y-4">
+      <div
+        className="grid grid-cols-1 md:grid-cols-12 md:gap-6 min-h-[480px] border border-white/[0.06] md:rounded-3xl bg-[var(--bg-app)] md:bg-white/[0.01] overflow-hidden md:relative fixed md:static inset-0 md:inset-auto z-[45] md:z-auto"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {/* Left Side: Users List — full screen on mobile until a chat is opened */}
+        <div className={`md:col-span-5 md:border-r border-white/[0.06] p-4 space-y-4 h-full md:h-auto overflow-y-auto ${activeChatUser ? 'hidden md:block' : 'block'}`}>
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Discussions</h3>
-          <div className="space-y-1.5 overflow-y-auto max-h-[380px]">
+          <div className="space-y-1.5 overflow-y-auto md:max-h-[380px]">
             {otherUsers.length === 0 ? (
               <p className="text-[11px] text-gray-500 py-6 text-center">No other members registered yet.</p>
             ) : (
@@ -1961,16 +1637,16 @@ function MessagesInboxView() {
                   <button
                     key={u.id}
                     onClick={() => setActiveChatUser(u)}
-                    className={`w-full p-3 rounded-2xl flex items-center gap-3 transition-all text-left cursor-pointer ${
+                    className={`w-full p-3 rounded-2xl flex items-center gap-3 transition-all text-left cursor-pointer active:scale-[0.99] ${
                       isActive 
                         ? 'bg-blue-600/10 border border-blue-500/20' 
                         : 'border border-transparent hover:bg-white/[0.02]'
                     }`}
                   >
-                    <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full object-cover border border-white/5" />
+                    <img src={u.avatarUrl} alt={u.name} className="w-11 h-11 md:w-9 md:h-9 rounded-full object-cover border border-white/5 shrink-0" />
                     <div className="overflow-hidden">
-                      <h4 className="text-xs font-bold text-[var(--text-primary)] truncate leading-none">{u.name}</h4>
-                      <p className="text-[10px] text-gray-400 mt-1 truncate">@{u.username}</p>
+                      <h4 className="text-sm md:text-xs font-bold text-[var(--text-primary)] truncate leading-none">{u.name}</h4>
+                      <p className="text-[11px] md:text-[10px] text-gray-400 mt-1 truncate">@{u.username}</p>
                     </div>
                   </button>
                 );
@@ -1979,12 +1655,18 @@ function MessagesInboxView() {
           </div>
         </div>
 
-        {/* Right Side: Chat Window */}
-        <div className="md:col-span-7 flex flex-col justify-between p-4 min-h-[400px]">
+        {/* Right Side: Chat Window — full-screen takeover on mobile, Instagram DM style */}
+        <div className={`md:col-span-7 flex-col justify-between p-4 min-h-[400px] h-full md:h-auto ${activeChatUser ? 'flex' : 'hidden md:flex'}`}>
           {activeChatUser ? (
             <>
               {/* Active Chat Header */}
-              <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 mb-3">
+              <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 mb-3 sticky top-0 bg-[var(--bg-app)] md:bg-transparent z-10">
+                <button
+                  onClick={() => setActiveChatUser(null)}
+                  className="md:hidden p-1 -ml-1 rounded-lg text-gray-400 hover:text-[var(--text-primary)] cursor-pointer"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
                 <img src={activeChatUser.avatarUrl} alt={activeChatUser.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                 <div>
                   <h4 className="text-xs font-bold text-[var(--text-primary)] leading-none">{activeChatUser.name}</h4>
@@ -1993,7 +1675,7 @@ function MessagesInboxView() {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-grow overflow-y-auto max-h-[260px] space-y-3 pr-1 py-2 text-xs">
+              <div className="flex-grow overflow-y-auto md:max-h-[260px] space-y-3 pr-1 py-2 text-xs">
                 {(() => {
                   const chatKey = [currentUser?.id, activeChatUser.id].sort().join('_');
                   const msgs = chatHistory[chatKey] || [];
@@ -2023,8 +1705,8 @@ function MessagesInboxView() {
                 })()}
               </div>
 
-              {/* Message Input Box */}
-              <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-white/[0.06]">
+              {/* Message Input Box — sticky above the mobile keyboard */}
+              <form onSubmit={handleSendMessage} className="flex gap-2 pt-3 border-t border-white/[0.06] sticky bottom-0 bg-[var(--bg-app)] md:bg-transparent">
                 <input
                   type="text"
                   placeholder={`Write a message to @${activeChatUser.username}...`}
@@ -2572,88 +2254,33 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
           <p className="text-[14px] sm:text-[15px] text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap font-sans break-words">{post.content}</p>
         )}
         
-        {/* Photos display blocks */}
+        {/* Photos display: one image at a time, Instagram-style swipe */}
         {post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0 ? (
-          <div className="space-y-2 select-none">
-            {post.imageUrls.length === 1 ? (
-              /* 1 image: Large preview */
-              <div 
-                onClick={() => setLightboxUrl(post.imageUrls![0])}
-                className={`relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5 cursor-zoom-in ${
-                  post.aspectRatio === '1:1'
-                    ? 'aspect-[1/1]'
-                    : post.aspectRatio === '4:5'
-                      ? 'aspect-[4/5]'
-                      : post.aspectRatio === '16:9'
-                        ? 'aspect-[16/9]'
-                        : post.aspectRatio === 'original'
-                          ? 'h-auto max-h-[420px]'
-                          : 'aspect-[4/5]'
-                }`}
-              >
-                <img src={post.imageUrls[0]} alt="Campus attachment" className="w-full h-full object-cover max-h-[420px]" referrerPolicy="no-referrer" />
-              </div>
-            ) : post.imageUrls.length === 2 ? (
-              /* 2 images: Two-column layout */
-              <div className="grid grid-cols-2 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
-                {post.imageUrls.slice(0, 2).map((url, i) => (
-                  <div key={i} onClick={() => setLightboxUrl(url)} className="relative aspect-[4/5] overflow-hidden cursor-zoom-in">
-                    <img src={url} alt={`Campus attachment ${i}`} className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
-                  </div>
-                ))}
-              </div>
-            ) : post.imageUrls.length === 3 ? (
-              /* 3 images: One large, two smaller row */
-              <div className="grid grid-cols-3 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
-                <div onClick={() => setLightboxUrl(post.imageUrls![0])} className="col-span-2 aspect-[4/5] overflow-hidden cursor-zoom-in">
-                  <img src={post.imageUrls[0]} alt="Campus attachment 0" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
-                </div>
-                <div className="grid grid-rows-2 gap-2.5">
-                  <div onClick={() => setLightboxUrl(post.imageUrls![1])} className="aspect-square overflow-hidden relative cursor-zoom-in">
-                    <img src={post.imageUrls[1]} alt="Campus attachment 1" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
-                  </div>
-                  <div onClick={() => setLightboxUrl(post.imageUrls![2])} className="aspect-square overflow-hidden relative cursor-zoom-in">
-                    <img src={post.imageUrls[2]} alt="Campus attachment 2" className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* 4+ images: responsive grid */
-              <div className="grid grid-cols-2 gap-2.5 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-black/5">
-                {post.imageUrls.slice(0, 4).map((url, i) => {
-                  const isLast = i === 3 && post.imageUrls!.length > 4;
-                  return (
-                    <div key={i} onClick={() => setLightboxUrl(url)} className="relative aspect-square overflow-hidden cursor-zoom-in">
-                      <img src={url} alt={`Campus attachment ${i}`} className="w-full h-full object-cover hover:scale-[1.015] transition-transform duration-200" referrerPolicy="no-referrer" />
-                      {isLast && (
-                        <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center">
-                          <span className="text-base font-bold text-white">+{post.imageUrls!.length - 4}</span>
-                          <span className="text-[10px] text-gray-300 font-medium">More Photos</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ) : post.imageUrl ? (
-          <div 
-            onClick={() => setLightboxUrl(post.imageUrl!)}
-            className={`rounded-2xl overflow-hidden border border-[var(--border-color)] bg-black/5 cursor-zoom-in ${
+          <ImageCarousel
+            images={post.imageUrls}
+            aspectClassName={
               post.aspectRatio === '1:1'
                 ? 'aspect-[1/1]'
-                : post.aspectRatio === '4:5'
-                  ? 'aspect-[4/5]'
-                  : post.aspectRatio === '16:9'
-                    ? 'aspect-[16/9]'
-                    : post.aspectRatio === 'original'
-                      ? 'h-auto max-h-[420px]'
-                      : 'aspect-[4/5]'
-            }`}
-          >
-            <img src={post.imageUrl} alt="Campus attachment" className="w-full h-full object-cover max-h-[420px]" referrerPolicy="no-referrer" />
-          </div>
+                : post.aspectRatio === '16:9'
+                  ? 'aspect-[16/9]'
+                  : 'aspect-[4/5]'
+            }
+            onImageClick={(url) => setLightboxUrl(url)}
+            showCounter={post.imageUrls.length > 1}
+          />
+        ) : post.imageUrl ? (
+          <ImageCarousel
+            images={[post.imageUrl]}
+            aspectClassName={
+              post.aspectRatio === '1:1'
+                ? 'aspect-[1/1]'
+                : post.aspectRatio === '16:9'
+                  ? 'aspect-[16/9]'
+                  : 'aspect-[4/5]'
+            }
+            onImageClick={(url) => setLightboxUrl(url)}
+            showDots={false}
+          />
         ) : null}
 
         {/* Link attachments */}
