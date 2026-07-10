@@ -209,7 +209,7 @@ export function CreatePostComposer({
         <div className="relative">
           {!content && (
             <div className="absolute top-0 left-0 text-gray-500 pointer-events-none select-none text-[17px] leading-relaxed font-sans">
-              Share something with your university...
+              Share a campus update, ask a question, or help a fellow student...
             </div>
           )}
           <div

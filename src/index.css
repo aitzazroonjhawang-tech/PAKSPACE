@@ -207,6 +207,16 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Feed performance: smooth scrolling across the app */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent layout shift while images load inside cards */
+img {
+  height: auto;
+}
+
 /* Prevent horizontal overflow anywhere on mobile — belt & suspenders */
 @media (max-width: 767px) {
   html, body, #root {

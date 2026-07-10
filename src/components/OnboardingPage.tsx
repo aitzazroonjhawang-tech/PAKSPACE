@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, GraduationCap, Check, UserPlus, MapPin, 
-  Globe, Instagram, Linkedin, User, Camera, Upload, 
-  ArrowRight, ArrowLeft, Image as ImageIcon, Video, VideoOff
+  Globe, Instagram, Linkedin, User, Camera, 
+  ArrowRight, ArrowLeft, Image as ImageIcon
 } from 'lucide-react';
 import PakSpaceLogo from './Logo';
 import UniversityDropdown from './UniversityDropdown';
@@ -28,10 +28,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   
   // Step 1 states: Profile Photo
-  const [avatar, setAvatar] = useState<string>('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150');
-  const [cameraActive, setCameraActive] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [avatar, setAvatar] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Step 2 states: Complete Profile
@@ -47,65 +44,6 @@ export default function OnboardingPage() {
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
   const [linkedin, setLinkedin] = useState('');
-
-  // Stop camera tracks helper
-  const stopCamera = () => {
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(track => track.stop());
-    }
-    setMediaStream(null);
-    setCameraActive(false);
-  };
-
-  // Start camera helper
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 300, height: 300, facingMode: 'user' }
-      });
-      setMediaStream(stream);
-      setCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error(err);
-      triggerToast('Could not access camera. Please allow permission or upload from gallery.');
-    }
-  };
-
-  // Trigger camera ref assignment
-  useEffect(() => {
-    if (cameraActive && videoRef.current && mediaStream) {
-      videoRef.current.srcObject = mediaStream;
-    }
-  }, [cameraActive, mediaStream]);
-
-  // Cleanup camera on unmount
-  useEffect(() => {
-    return () => {
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [mediaStream]);
-
-  // Capture photo onto Canvas
-  const capturePhoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 300;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, 300, 300);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        setAvatar(dataUrl);
-        triggerToast('Profile photo captured! 📸');
-        stopCamera();
-      }
-    }
-  };
 
   // Handle local file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +74,6 @@ export default function OnboardingPage() {
 
   const handleNext = () => {
     if (step === 1) {
-      stopCamera();
       setStep(2);
     } else if (step === 2) {
       if (!name.trim()) {
@@ -156,7 +93,6 @@ export default function OnboardingPage() {
   };
 
   const handleBack = () => {
-    stopCamera();
     setStep(prev => Math.max(1, prev - 1));
   };
 
@@ -192,24 +128,40 @@ export default function OnboardingPage() {
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[var(--brand-blue)]/[0.02] rounded-full filter blur-[100px] pointer-events-none" />
 
       {/* Progress Tracker Header */}
-      <div className="w-full max-w-xl mb-8 flex items-center justify-between z-10">
+      <div className="w-full max-w-[560px] mb-10 flex flex-col items-center gap-6 z-10">
         <div className="flex items-center gap-2">
           <PakSpaceLogo size="sm" showText={false} />
           <span className="text-sm font-bold tracking-tight text-[var(--text-primary)] font-display">Customize Your Profile</span>
         </div>
-        
-        {/* Horizontal steps marker */}
-        <div className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-color)] px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono">
-          <span className={step === 1 ? 'text-[var(--brand-blue)] font-bold' : ''}>1. Photo</span>
-          <span>•</span>
-          <span className={step === 2 ? 'text-[var(--brand-blue)] font-bold' : ''}>2. Profile</span>
-          <span>•</span>
-          <span className={step === 3 ? 'text-[var(--brand-blue)] font-bold' : ''}>3. Personalize</span>
+
+        {/* Minimal stepper: small circles joined by thin lines */}
+        <div className="flex items-center w-full max-w-[280px]">
+          {[1, 2, 3].map((s, i) => (
+            <React.Fragment key={s}>
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                    step >= s ? 'bg-[var(--brand-blue)]' : 'bg-[var(--border-strong)]'
+                  }`}
+                />
+                <span className={`text-[10px] font-medium tracking-wide transition-colors duration-300 ${
+                  step === s ? 'text-[var(--brand-blue)]' : 'text-gray-400'
+                }`}>
+                  {s === 1 ? 'Photo' : s === 2 ? 'Profile' : 'Personalize'}
+                </span>
+              </div>
+              {i < 2 && (
+                <div className={`flex-1 h-px mx-2 -mt-4 transition-colors duration-300 ${
+                  step > s ? 'bg-[var(--brand-blue)]' : 'bg-[var(--border-color)]'
+                }`} />
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
       {/* Main Container Form Card */}
-      <div className="w-full max-w-xl bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 backdrop-blur-md">
+      <div className="w-full max-w-[560px] bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-3xl p-6 md:p-10 shadow-2xl relative z-10 backdrop-blur-md">
         
         {/* STEP 1: UPLOAD PROFILE PHOTO */}
         {step === 1 && (
@@ -219,76 +171,44 @@ export default function OnboardingPage() {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Upload Profile Photo</h2>
-              <p className="text-xs text-gray-400">Capture a live picture from your device camera or choose a photo from your gallery.</p>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Add your profile photo</h2>
+              <p className="text-sm text-gray-400">A real photo helps other students recognize and trust you.</p>
             </div>
 
             {/* Profile Photo Preview Circle */}
-            <div className="flex flex-col items-center justify-center py-4 space-y-4">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-[var(--brand-blue)] bg-black/40 shadow-xl flex items-center justify-center">
-                {cameraActive ? (
-                  <video 
-                    ref={videoRef} 
-                    id="webcam-video"
-                    autoPlay 
-                    playsInline 
-                    className="w-full h-full object-cover scale-x-[-1]"
-                  />
+            <div className="flex flex-col items-center justify-center py-6 space-y-5">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`group relative w-32 h-32 rounded-full overflow-hidden shadow-sm flex items-center justify-center cursor-pointer transition-all ${
+                  avatar
+                    ? 'border-2 border-[var(--brand-blue)]'
+                    : 'border-2 border-dashed border-[var(--border-strong)] hover:border-[var(--brand-blue)]/50 bg-[var(--bg-surface-2)]'
+                }`}
+              >
+                {avatar ? (
+                  <>
+                    <img src={avatar} alt="Avatar Preview" className="w-full h-full object-cover animate-fade-in" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </>
                 ) : (
-                  <img src={avatar} alt="Avatar Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                )}
-                
-                {cameraActive && (
-                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-[var(--brand-blue)] text-white text-[8px] font-mono font-bold rounded-full uppercase animate-pulse select-none">
-                    Live
-                  </div>
+                  <Camera className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
                 )}
               </div>
 
-              {/* Upload & Camera Buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm pt-2 font-mono">
-                {cameraActive ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="w-full py-2.5 px-4 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
-                    >
-                      <Camera className="w-4 h-4" />
-                      Capture Photo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={stopCamera}
-                      className="w-full py-2.5 px-4 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-[var(--border-color)]"
-                    >
-                      <VideoOff className="w-4 h-4" />
-                      Cancel Camera
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={startCamera}
-                      className="w-full py-2.5 px-4 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
-                    >
-                      <Camera className="w-4 h-4" />
-                      Use Device Camera
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-4 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-200 border border-[var(--border-color)] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-                    >
-                      <Upload className="w-4 h-4 text-[var(--brand-blue)]" />
-                      Upload From Gallery
-                    </button>
-                  </>
-                )}
-              </div>
+              {/* Single, simple upload action */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="py-2.5 px-6 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] text-white font-semibold text-xs rounded-full flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                Choose Photo
+              </button>
+              <p className="text-[10px] text-gray-400">PNG, JPG, or WEBP up to 3MB</p>
 
-              {/* Hidden file input */}
+              {/* Hidden file input — opens the native camera / gallery / file picker */}
               <input 
                 ref={fileInputRef}
                 type="file" 
@@ -298,22 +218,12 @@ export default function OnboardingPage() {
               />
             </div>
 
-            {/* Drag & Drop Hint */}
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border border-dashed border-[var(--border-color)] rounded-2xl p-6 text-center hover:bg-[var(--bg-app)] hover:border-[var(--brand-blue)]/50 cursor-pointer transition-all select-none font-mono"
-            >
-              <ImageIcon className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-              <p className="text-[11px] text-gray-400">Drag and drop profile images here, or <span className="text-[var(--brand-blue)] hover:underline">browse files</span></p>
-              <p className="text-[9px] text-gray-600 mt-1">PNG, JPG, or WEBP up to 3MB</p>
-            </div>
-
             {/* Next Step Footer */}
-            <div className="pt-4 flex justify-end font-mono">
+            <div className="pt-4 flex justify-end">
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full sm:w-40 py-3.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold rounded-xl transition-all shadow-lg shadow-[var(--brand-blue)]/10 text-xs cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full sm:w-40 py-3.5 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] text-white font-semibold rounded-2xl transition-all shadow-sm hover:shadow-md text-xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
               >
                 Continue Setup
                 <ArrowRight className="w-4 h-4" />
@@ -331,13 +241,13 @@ export default function OnboardingPage() {
           >
             <div className="space-y-1">
               <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Complete profile details</h2>
-              <p className="text-xs text-gray-400 font-mono">Tell other students and creators who you are and where you study.</p>
+              <p className="text-xs text-gray-400">Tell other students and creators who you are and where you study.</p>
             </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                     Display Name
                   </label>
                   <div className="relative">
@@ -354,7 +264,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                     Username
                   </label>
                   <input
@@ -370,7 +280,7 @@ export default function OnboardingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                     University / Organization Name
                   </label>
                   <UniversityDropdown 
@@ -381,7 +291,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                     Degree / Study Program
                   </label>
                   <input
@@ -395,7 +305,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                   Location (City)
                 </label>
                 <div className="relative">
@@ -412,7 +322,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                   Short Bio
                 </label>
                 <textarea
@@ -426,11 +336,11 @@ export default function OnboardingPage() {
             </div>
 
             {/* Back & Next Step Footer */}
-            <div className="pt-4 flex items-center justify-between gap-4 font-mono">
+            <div className="pt-4 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[var(--border-color)] transition-colors"
+                className="px-5 py-3 bg-transparent hover:bg-[var(--bg-app)] text-gray-400 font-semibold rounded-2xl text-xs cursor-pointer flex items-center gap-1 transition-all active:scale-[0.98]"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -439,7 +349,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={handleNext}
                 disabled={!name.trim() || !username.trim() || !affiliationName.trim() || !city.trim()}
-                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[var(--brand-blue)]/10 transition-colors"
+                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-2xl text-xs cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
               >
                 Next Step
                 <ArrowRight className="w-4 h-4" />
@@ -457,13 +367,13 @@ export default function OnboardingPage() {
           >
             <div className="space-y-1">
               <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] font-display">Choose interests to personalize feed</h2>
-              <p className="text-xs text-gray-400 font-mono">Personalize your feed by selecting topics of interest across Pakistan.</p>
+              <p className="text-xs text-gray-400">Personalize your feed by selecting topics of interest across Pakistan.</p>
             </div>
 
             <div className="space-y-5 text-left">
               {/* Grid of Interests */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                   Select Topics
                 </label>
                 <div className="flex flex-wrap gap-2.5">
@@ -474,7 +384,7 @@ export default function OnboardingPage() {
                         key={interest}
                         type="button"
                         onClick={() => toggleInterest(interest)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
                           selected
                             ? 'bg-[var(--brand-blue)] border-[var(--brand-blue)] text-white shadow-md shadow-[var(--brand-blue)]/20'
                             : 'bg-[var(--bg-app)] border-[var(--border-color)] text-gray-400 hover:border-gray-500 hover:text-[var(--text-primary)]'
@@ -490,11 +400,11 @@ export default function OnboardingPage() {
 
               {/* Coordinates */}
               <div className="space-y-3 pt-4 border-t border-[var(--border-color)]">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)] font-mono">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-blue)]">
                   Social Links (Optional)
                 </label>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 font-mono">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="flex items-center gap-2 px-3 bg-[var(--bg-app)] border border-[var(--border-color)] rounded-xl">
                     <Globe className="w-4 h-4 text-gray-600 shrink-0" />
                     <input
@@ -532,11 +442,11 @@ export default function OnboardingPage() {
             </div>
 
             {/* Back & Finish Footer */}
-            <div className="pt-4 flex items-center justify-between gap-4 font-mono">
+            <div className="pt-4 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3 bg-[var(--bg-app)] hover:bg-[var(--bg-surface)] text-gray-300 font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1 border border-[var(--border-color)] transition-colors"
+                className="px-5 py-3 bg-transparent hover:bg-[var(--bg-app)] text-gray-400 font-semibold rounded-2xl text-xs cursor-pointer flex items-center gap-1 transition-all active:scale-[0.98]"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -545,7 +455,7 @@ export default function OnboardingPage() {
                 id="finish-onboarding-btn"
                 type="button"
                 onClick={handleFinish}
-                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] border border-[var(--border-color)] text-white font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 shadow-lg shadow-[var(--brand-blue)]/10 transition-colors"
+                className="px-6 py-3 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue-hover)] text-white font-semibold rounded-2xl text-xs cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
               >
                 <UserPlus className="w-4 h-4 text-[var(--text-primary)]" />
                 Complete Onboarding

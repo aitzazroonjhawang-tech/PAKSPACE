@@ -55,6 +55,14 @@ export default function MainApp() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setIsHeaderScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   
   // Create post states
   const [newPostTitle, setNewPostTitle] = useState('');
@@ -530,12 +538,17 @@ export default function MainApp() {
       </aside>
 
       {/* MOBILE HEADER */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--border-color)] bg-[var(--bg-app)] sticky top-0 z-40 w-full select-none">
+      <header
+        className={`md:hidden flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-color)] bg-[var(--bg-surface)] sticky top-0 z-40 w-full select-none transition-shadow duration-200 ${
+          isHeaderScrolled ? 'shadow-[0_2px_10px_-2px_rgba(0,0,0,0.08)]' : ''
+        }`}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.625rem)' }}
+      >
         <div className="flex items-center gap-3">
           <button
             id="mobile-hamburger-btn"
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
+            className="p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -553,7 +566,7 @@ export default function MainApp() {
           </span>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1">
           <button
             id="mobile-settings-btn"
             onClick={() => setIsSettingsOpen(true)}
@@ -702,7 +715,7 @@ export default function MainApp() {
 
       {/* MOBILE BOTTOM NAVIGATION — fixed, Instagram/Threads style */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-app)]/95 backdrop-blur-lg border-t border-[var(--border-color)]"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-surface)] border-t border-[var(--border-color)]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-stretch justify-between px-0.5">
@@ -1336,7 +1349,7 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
   const { currentUser, posts } = useApp();
   
   return (
-    <div className="max-w-[650px] mx-auto space-y-6 animate-fade-in font-sans w-full px-1 sm:px-0">
+    <div className="max-w-[650px] mx-auto space-y-4 sm:space-y-6 animate-fade-in font-sans w-full">
       <div 
         onClick={onCreateClick}
         className="flex items-center space-x-4 bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl cursor-pointer hover:border-[var(--brand-blue)]/30 hover:bg-white/[0.04] transition-all select-none"
@@ -1347,7 +1360,7 @@ function HomeFeedView({ onCreateClick }: { onCreateClick: () => void }) {
           className="w-10 h-10 rounded-full object-cover border border-white/10"
           referrerPolicy="no-referrer"
         />
-        <span className="text-gray-400 text-xs font-medium">What is on your mind? Share an opportunity, ask a question...</span>
+        <span className="text-gray-400 text-xs font-medium">Share a campus update, ask a question, or help a fellow student...</span>
       </div>
 
       <div className="space-y-4 text-left">
@@ -1558,7 +1571,7 @@ function ExploreView() {
             </div>
             <h3 className="text-sm font-bold text-[var(--text-primary)] tracking-tight font-display">Search the entire network</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Find and follow developers, designers, writers, and students. Join degree-specific spaces and explore peer conversations across Pakistan.
+              Discover fellow students, academic mentors, campus clubs, and university communities across Pakistan.
             </p>
           </div>
         </div>
@@ -1730,7 +1743,7 @@ function MessagesInboxView() {
               <div className="space-y-1.5">
                 <h4 className="text-sm font-bold text-[var(--text-primary)] tracking-tight">Direct Messaging</h4>
                 <p className="text-[11px] text-gray-400 max-w-xs leading-relaxed">
-                  Start a conversation with developers, writers, and builders across Pakistan. Select any user on the left pane to connect!
+                  Connect with classmates, project partners, society members, and students from universities across Pakistan. Start meaningful conversations and build your campus network.
                 </p>
               </div>
             </div>
@@ -2132,7 +2145,7 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
   };
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-5 md:p-6 text-left space-y-4 shadow-xs hover:shadow-md hover:border-[var(--border-strong)]/40 hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 md:p-6 text-left space-y-3 sm:space-y-4 shadow-xs hover:shadow-md hover:border-[var(--border-strong)]/40 hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden">
       {/* Visual Indicator for Live Preview mode */}
       {isPreview && (
         <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 text-[9px] text-center font-bold text-blue-400 py-1 uppercase tracking-widest border-b border-blue-500/10 select-none">
@@ -2151,6 +2164,8 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
             }}
             src={post.isAnonymous ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' : postAuthor.avatarUrl} 
             alt={post.isAnonymous ? 'Anonymous' : postAuthor.name} 
+            loading="lazy"
+            decoding="async"
             className={`w-10 h-10 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
             referrerPolicy="no-referrer"
           />
@@ -2258,26 +2273,16 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
         {post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0 ? (
           <ImageCarousel
             images={post.imageUrls}
-            aspectClassName={
-              post.aspectRatio === '1:1'
-                ? 'aspect-[1/1]'
-                : post.aspectRatio === '16:9'
-                  ? 'aspect-[16/9]'
-                  : 'aspect-[4/5]'
-            }
+            fit="contain"
+            maxHeight="400px"
             onImageClick={(url) => setLightboxUrl(url)}
             showCounter={post.imageUrls.length > 1}
           />
         ) : post.imageUrl ? (
           <ImageCarousel
             images={[post.imageUrl]}
-            aspectClassName={
-              post.aspectRatio === '1:1'
-                ? 'aspect-[1/1]'
-                : post.aspectRatio === '16:9'
-                  ? 'aspect-[16/9]'
-                  : 'aspect-[4/5]'
-            }
+            fit="contain"
+            maxHeight="400px"
             onImageClick={(url) => setLightboxUrl(url)}
             showDots={false}
           />

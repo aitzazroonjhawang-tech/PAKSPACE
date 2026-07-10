@@ -19,6 +19,12 @@ interface ImageCarouselProps {
   className?: string;
   imgClassName?: string;
   alt?: string;
+  /** 'cover' crops to fill aspectClassName (default, used by cropper/preview UI).
+   *  'contain' never crops — the image keeps its natural aspect ratio and is
+   *  letterboxed within a capped height. Use for feed post images. */
+  fit?: 'cover' | 'contain';
+  /** Max height applied when fit === 'contain'. Defaults to 400px per feed spec. */
+  maxHeight?: string;
 }
 
 /**
@@ -39,7 +45,9 @@ export function ImageCarousel({
   showArrows = true,
   className = '',
   imgClassName = '',
-  alt = 'Attachment'
+  alt = 'Attachment',
+  fit = 'cover',
+  maxHeight = '400px'
 }: ImageCarouselProps) {
   const isControlled = index !== undefined;
   const [internalIdx, setInternalIdx] = useState(0);
@@ -101,7 +109,8 @@ export function ImageCarousel({
     <div className={`relative select-none ${className}`}>
       <div
         ref={trackRef}
-        className={`relative w-full overflow-hidden ${rounded} border border-[var(--border-color)] bg-black/5 touch-pan-y ${aspectClassName}`}
+        className={`relative w-full overflow-hidden ${rounded} border border-[var(--border-color)] bg-[var(--bg-surface-2)] touch-pan-y ${fit === 'contain' ? '' : aspectClassName}`}
+        style={fit === 'contain' ? { height: maxHeight, maxHeight } : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -126,7 +135,7 @@ export function ImageCarousel({
               <img
                 src={url}
                 alt={`${alt} ${i + 1}`}
-                className={`w-full h-full object-cover ${imgClassName}`}
+                className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${imgClassName}`}
                 referrerPolicy="no-referrer"
                 loading={i === 0 ? 'eager' : 'lazy'}
                 decoding="async"
