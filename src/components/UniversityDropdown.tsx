@@ -89,7 +89,6 @@ export const UNIVERSITIES_LIST = [
   "Kohat University of Science and Technology",
   "Islamia College University",
   "University of Haripur",
-  "Shaheed Benazir photto University Sheringal", // matches the user's Shaheed Benazir Bhutto University Sheringal
   "Shaheed Benazir Bhutto University Sheringal",
   "Agriculture University Peshawar",
 
