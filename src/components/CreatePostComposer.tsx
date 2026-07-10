@@ -7,7 +7,7 @@ import React, { useRef, useState, useEffect, FormEvent } from 'react';
 import {
   Bold, Italic, Underline, List, ListOrdered, Quote, Link as LinkIcon, Code,
   Plus, Image as ImageIcon, Heading2, Undo2, Redo2, X, Smile, RefreshCw,
-  Crop, AlignCenter, GripVertical, Check, Lock, ChevronLeft
+  Crop, AlignCenter, GripVertical, Check, Lock, ChevronLeft, Paperclip, FileText
 } from 'lucide-react';
 import { User, Space } from '../types';
 import { ImageCarousel } from './ImageCarousel';
@@ -32,6 +32,9 @@ interface CreatePostComposerProps {
   isPublishing: boolean;
   onSubmit: (e: FormEvent) => void;
   onClose: () => void;
+  attachments?: { name: string; size: number; type: string; url: string; }[];
+  onAddAttachments?: (files: File[]) => void;
+  onRemoveAttachment?: (idx: number) => void;
 }
 
 const EMOJIS = ['😀', '😂', '😍', '🥳', '😎', '🤔', '👏', '🔥', '💯', '🎓', '📚', '☕', '🙌', '❤️', '😢', '😮'];
@@ -55,7 +58,10 @@ export function CreatePostComposer({
   onChangeSpaceId,
   isPublishing,
   onSubmit,
-  onClose
+  onClose,
+  attachments = [],
+  onAddAttachments,
+  onRemoveAttachment
 }: CreatePostComposerProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [charCount, setCharCount] = useState(0);
@@ -108,8 +114,17 @@ export function CreatePostComposer({
   const replaceInputIdFor = (idx: number) => `composer-replace-input-${idx}`;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    const files = (Array.from(e.target.files || []) as File[]).filter(f => f.type.startsWith('image/'));
     if (files.length > 0) onAddPhotos(files);
+    e.target.value = '';
+    setShowInsertMenu(false);
+  };
+
+  const handleFileAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
+    if (files.length > 0 && onAddAttachments) {
+      onAddAttachments(files);
+    }
     e.target.value = '';
     setShowInsertMenu(false);
   };
@@ -340,6 +355,35 @@ export function CreatePostComposer({
           </div>
         )}
 
+        {/* Attachments rendering */}
+        {attachments && attachments.length > 0 && (
+          <div className="space-y-2 pt-2 text-left">
+            <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Attachments ({attachments.length})</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {attachments.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-xl text-xs transition-all">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[var(--text-primary)] truncate">{file.name}</p>
+                      <p className="text-[10px] text-gray-500 font-mono">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    </div>
+                  </div>
+                  {onRemoveAttachment && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveAttachment(idx)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-red-400 hover:bg-white/5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Upload progress */}
         {Object.keys(uploadProgressMap).length > 0 && (
           <div className="space-y-2">
@@ -377,7 +421,14 @@ export function CreatePostComposer({
                 onClick={() => document.getElementById(fileInputId)?.click()}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--text-primary)] hover:bg-white/5 transition-all cursor-pointer text-left"
               >
-                <ImageIcon className="w-4 h-4 text-blue-400" /> Image
+                <ImageIcon className="w-4 h-4 text-blue-400" /> Image / Photo
+              </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById('composer-attachment-input')?.click()}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--text-primary)] hover:bg-white/5 transition-all cursor-pointer text-left"
+              >
+                <Paperclip className="w-4 h-4 text-emerald-400" /> Document / File (PDF, Word...)
               </button>
               <button type="button" onClick={() => { exec('formatBlock', '<h3>'); setShowInsertMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--text-primary)] hover:bg-white/5 transition-all cursor-pointer text-left">
                 <Heading2 className="w-4 h-4 text-gray-400" /> Heading
@@ -405,6 +456,14 @@ export function CreatePostComposer({
             className="hidden"
             onChange={handleFileChange}
           />
+          <input
+            id="composer-attachment-input"
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+            multiple
+            className="hidden"
+            onChange={handleFileAttachmentChange}
+          />
         </div>
       </div>
 
@@ -430,6 +489,15 @@ export function CreatePostComposer({
             className="p-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-[var(--text-primary)] transition-all cursor-pointer"
           >
             <ImageIcon className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => document.getElementById('composer-attachment-input')?.click()}
+            title="Attach documents / files"
+            className="p-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-[var(--text-primary)] transition-all cursor-pointer"
+          >
+            <Paperclip className="w-4 h-4 text-emerald-400" />
           </button>
 
           <div className="relative">

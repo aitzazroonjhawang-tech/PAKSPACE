@@ -48,7 +48,7 @@ interface AppContextType {
   setDarkMode: (dark: boolean) => void;
   
   // Interactive actions
-  addPost: (content: string, type: 'text' | 'photo' | 'link' | 'question', options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }) => void;
+  addPost: (content: string, type: 'text' | 'photo' | 'link' | 'question', options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean; attachments?: { name: string; size: number; type: string; url: string; }[] }) => void;
   addComment: (postId: string, content: string, isAnonymous?: boolean) => void;
   toggleLike: (postId: string) => void;
   toggleBookmark: (postId: string) => void;
@@ -98,8 +98,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('pakspace_v3_initialized', 'true');
     }
     const saved = localStorage.getItem('pakspace_dark');
-    // Default theme is now the solid-yellow light mode.
-    return saved ? saved === 'true' : false;
+    // Default theme is now the solid-yellow light mode, but user requested initial load theme to be dark!
+    return saved ? saved === 'true' : true;
   });
 
   const [users, setUsers] = useState<User[]>(() => {
@@ -344,7 +344,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addPost = (
     content: string, 
     type: 'text' | 'photo' | 'link' | 'question', 
-    options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean }
+    options?: { title?: string; imageUrl?: string; imageUrls?: string[]; aspectRatio?: '1:1' | '4:5' | '16:9' | 'original'; linkUrl?: string; linkTitle?: string; spaceId?: string; isAnonymous?: boolean; attachments?: { name: string; size: number; type: string; url: string; }[] }
   ) => {
     if (!currentUser) return;
     
@@ -370,7 +370,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       commentsCount: 0,
       createdAt: new Date().toISOString(),
       isAnonymous,
-      anonymousName
+      anonymousName,
+      attachments: options?.attachments
     };
 
     setPosts(prev => [newPost, ...prev]);

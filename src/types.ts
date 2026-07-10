@@ -43,6 +43,7 @@ export interface Post {
   createdAt: string;
   isAnonymous?: boolean;
   anonymousName?: string; // e.g. "Anonymous Student #4821"
+  attachments?: { name: string; size: number; type: string; url: string; }[];
 }
 
 export interface Comment {

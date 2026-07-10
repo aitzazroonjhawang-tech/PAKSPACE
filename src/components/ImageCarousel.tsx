@@ -69,7 +69,23 @@ export function ImageCarousel({
 
   if (!images || images.length === 0) return null;
 
-  const single = images.length === 1;
+  if (images.length === 1) {
+    return (
+      <div className={`relative w-full flex justify-center overflow-hidden ${rounded} ${className}`}>
+        <img
+          src={images[0]}
+          alt={alt}
+          className={`w-full h-auto max-h-[500px] object-contain cursor-zoom-in ${rounded} ${imgClassName}`}
+          onClick={() => onImageClick?.(images[0], 0)}
+          referrerPolicy="no-referrer"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+    );
+  }
+
+  const single = false;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (single) return;
@@ -109,8 +125,8 @@ export function ImageCarousel({
     <div className={`relative select-none ${className}`}>
       <div
         ref={trackRef}
-        className={`relative w-full overflow-hidden ${rounded} border border-[var(--border-color)] bg-[var(--bg-surface-2)] touch-pan-y ${fit === 'contain' ? '' : aspectClassName}`}
-        style={fit === 'contain' ? { height: maxHeight, maxHeight } : undefined}
+        className={`relative w-full overflow-hidden ${rounded} ${fit === 'contain' ? 'border-0 bg-transparent h-auto' : 'border border-[var(--border-color)] bg-[var(--bg-surface-2)] ' + aspectClassName} touch-pan-y`}
+        style={fit === 'contain' ? { maxHeight } : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -118,7 +134,7 @@ export function ImageCarousel({
         onPointerCancel={endDrag}
       >
         <div
-          className="flex h-full"
+          className={`flex ${fit === 'contain' ? 'items-center' : 'h-full'}`}
           style={{
             width: `${images.length * 100}%`,
             transform: `translateX(calc(${-activeIdx * (100 / images.length)}% + ${dragOffset}px))`,
@@ -128,14 +144,15 @@ export function ImageCarousel({
           {images.map((url, i) => (
             <div
               key={i}
-              className="h-full shrink-0 cursor-zoom-in"
+              className={`shrink-0 cursor-zoom-in ${fit === 'contain' ? 'h-auto' : 'h-full'}`}
               style={{ width: `${100 / images.length}%` }}
               onClick={(e) => handleImgClick(e, url)}
             >
               <img
                 src={url}
                 alt={`${alt} ${i + 1}`}
-                className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${imgClassName}`}
+                className={`w-full ${fit === 'contain' ? 'h-auto object-contain' : 'h-full object-cover'} ${imgClassName}`}
+                style={fit === 'contain' ? { maxHeight } : undefined}
                 referrerPolicy="no-referrer"
                 loading={i === 0 ? 'eager' : 'lazy'}
                 decoding="async"

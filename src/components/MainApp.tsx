@@ -12,7 +12,7 @@ import {
   LogOut, Moon, Sun, ArrowLeft, Check, Compass as CompassIcon, 
   MapPin, GraduationCap, X, Calendar, ArrowRight, ExternalLink, Key, Sparkles,
   ShoppingBag, Lock, Unlock, EyeOff, UserCheck, Settings, GripVertical, RefreshCw,
-  CircleHelp, Info
+  CircleHelp, Info, FileText
 } from 'lucide-react';
 import { Post, Space, User, Scholarship, University, Comment } from '../types';
 import PakSpaceLogo from './Logo';
@@ -21,6 +21,360 @@ import UniversityDropdown from './UniversityDropdown';
 import { RichTextEditor } from './RichTextEditor';
 import { ImageCarousel } from './ImageCarousel';
 import { CreatePostComposer } from './CreatePostComposer';
+
+interface ImageCropModalProps {
+  imageUrl: string;
+  aspect: '1:1' | '16:9' | 'any';
+  onConfirm: (croppedBase64: string) => void;
+  onCancel: () => void;
+}
+
+function ImageCropModal({ imageUrl, aspect, onConfirm, onCancel }: ImageCropModalProps) {
+  const [currentAspect, setCurrentAspect] = useState<'1:1' | '16:9' | '4:5'>(
+    aspect === 'any' ? '1:1' : aspect
+  );
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const initialOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setZoom(1);
+    setOffsetX(0);
+    setOffsetY(0);
+  }, [currentAspect]);
+
+  let viewportWidth = 280;
+  let viewportHeight = 280;
+  if (currentAspect === '16:9') {
+    viewportHeight = 157;
+  } else if (currentAspect === '4:5') {
+    viewportWidth = 224;
+    viewportHeight = 280;
+  }
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    initialOffset.current = { x: offsetX, y: offsetY };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setOffsetX(initialOffset.current.x + dx);
+    setOffsetY(initialOffset.current.y + dy);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+  };
+
+  const handleApply = () => {
+    const img = new Image();
+    img.src = imageUrl;
+    img.onload = () => {
+      const targetWidth = currentAspect === '1:1' ? 400 : currentAspect === '16:9' ? 800 : 480;
+      const targetHeight = currentAspect === '1:1' ? 400 : currentAspect === '16:9' ? 450 : 600;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Fill background
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+      // Scale factor mapping viewport to canvas
+      const scaleFactor = targetWidth / viewportWidth;
+
+      // Translate to center of canvas
+      ctx.translate(targetWidth / 2, targetHeight / 2);
+      
+      // Apply user rotation
+      ctx.rotate((rotation * Math.PI) / 180);
+
+      // Apply user panning
+      ctx.translate(offsetX * scaleFactor, offsetY * scaleFactor);
+
+      // Apply user zoom and standard cover scale
+      ctx.scale(zoom * scaleFactor, zoom * scaleFactor);
+
+      // Calculate initial layout cover dimensions
+      const viewportAspect = viewportWidth / viewportHeight;
+      const imageAspect = img.naturalWidth / img.naturalHeight;
+      let initialWidth = 0;
+      let initialHeight = 0;
+
+      if (imageAspect > viewportAspect) {
+        initialHeight = viewportHeight;
+        initialWidth = viewportHeight * imageAspect;
+      } else {
+        initialWidth = viewportWidth;
+        initialHeight = viewportWidth / imageAspect;
+      }
+
+      // Draw original image centered
+      ctx.drawImage(img, -initialWidth / 2, -initialHeight / 2, initialWidth, initialHeight);
+
+      onConfirm(canvas.toDataURL('image/jpeg', 0.95));
+    };
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in select-none">
+      <div className="bg-[#0c0c0e] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 flex flex-col space-y-6">
+        <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <h3 className="text-xs font-bold text-white tracking-wider uppercase font-display">Adjust & Crop Image</h3>
+          <button onClick={onCancel} className="text-gray-400 hover:text-white transition-all cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Viewport Workspace */}
+        <div className="flex justify-center items-center py-4 bg-black/40 rounded-xl border border-white/[0.04]">
+          <div 
+            style={{ width: viewportWidth, height: viewportHeight }}
+            className="relative overflow-hidden border border-white/20 rounded-xl bg-[#050505] flex items-center justify-center cursor-grab active:cursor-grabbing"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+          >
+            {/* Rule of thirds grid overlay */}
+            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none z-10">
+              <div className="border-r border-b border-white/10"></div>
+              <div className="border-r border-b border-white/10"></div>
+              <div className="border-b border-white/10"></div>
+              <div className="border-r border-b border-white/10"></div>
+              <div className="border-r border-b border-white/10"></div>
+              <div className="border-b border-white/10"></div>
+              <div className="border-r border-white/10"></div>
+              <div className="border-r border-white/10"></div>
+              <div></div>
+            </div>
+
+            {/* Circular mask line if it is 1:1 avatar crop */}
+            {currentAspect === '1:1' && (
+              <div className="absolute inset-2 rounded-full border border-dashed border-blue-500/40 pointer-events-none z-10"></div>
+            )}
+
+            <img
+              src={imageUrl}
+              alt="Crop preview"
+              className="absolute max-w-none max-h-none select-none pointer-events-none origin-center object-cover"
+              style={{
+                width: '100%',
+                height: '100%',
+                transform: `translate(${offsetX}px, ${offsetY}px) scale(${zoom}) rotate(${rotation}deg)`,
+                transition: isDragging ? 'none' : 'transform 100ms ease-out',
+              }}
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Aspect Ratio Selector */}
+          <div className="space-y-1.5">
+            <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Choose Shape</div>
+            <div className="grid grid-cols-3 gap-1 bg-white/[0.02] p-1 rounded-xl border border-white/5">
+              {(['1:1', '16:9', '4:5'] as const).map((ratio) => (
+                <button
+                  key={ratio}
+                  type="button"
+                  onClick={() => setCurrentAspect(ratio)}
+                  className={`py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                    currentAspect === ratio
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {ratio === '1:1' ? 'Square' : ratio === '16:9' ? 'Landscape' : 'Portrait'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Zoom Slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+              <span>Zoom Slider</span>
+              <span className="font-mono text-blue-400">{zoom.toFixed(1)}x</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-[10px] text-gray-500 font-bold uppercase">Min</span>
+              <input
+                type="range"
+                min="1"
+                max="4"
+                step="0.05"
+                value={zoom}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="flex-grow h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500 focus:outline-none"
+              />
+              <span className="text-[10px] text-gray-300 font-bold uppercase">Max</span>
+            </div>
+          </div>
+
+          {/* Rotate Button */}
+          <div className="flex justify-between items-center bg-white/[0.01] p-3 rounded-xl border border-white/[0.05]">
+            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Alignment</span>
+            <button
+              onClick={() => setRotation(prev => (prev + 90) % 360)}
+              className="flex items-center space-x-1.5 text-[11px] font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer border border-blue-500/10"
+            >
+              <RefreshCw className="w-3 h-3 animate-spin-slow" />
+              <span>Rotate 90°</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3 pt-3 border-t border-white/5">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2 rounded-xl border border-white/10 text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleApply}
+            className="flex-1 py-2 rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-500 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-lg shadow-blue-950/40"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>Apply Crop</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ImageUploadFieldProps {
+  label: string;
+  value: string;
+  onChange: (base64: string) => void;
+  aspect?: '1:1' | '16:9' | 'any';
+}
+
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  aspect = '1:1'
+}: ImageUploadFieldProps) {
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [croppingImage, setCroppingImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (aspect === 'any') {
+        onChange(reader.result as string);
+      } else {
+        setCroppingImage(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  return (
+    <div className="space-y-1 text-left w-full">
+      <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{label}</label>
+      <div
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${
+          isDragActive 
+            ? 'border-blue-500 bg-blue-500/5' 
+            : 'border-white/[0.08] bg-white/[0.01] hover:border-white/[0.15] hover:bg-white/[0.02]'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) processFile(file);
+          }}
+        />
+        {value ? (
+          <div className="relative w-full flex flex-col items-center">
+            <img
+              src={value}
+              alt={label}
+              className={`object-cover rounded-xl ${aspect === '1:1' ? 'w-16 h-16' : 'w-full h-24'}`}
+              referrerPolicy="no-referrer"
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+              }}
+              className="mt-2 text-[10px] text-red-400 font-bold hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center text-center space-y-1">
+            <Upload className="w-5 h-5 text-gray-400" />
+            <span className="text-[11px] text-gray-400">Click or Drag & Drop</span>
+            <span className="text-[9px] text-gray-600 font-mono">Camera / Gallery</span>
+          </div>
+        )}
+      </div>
+
+      {croppingImage && (
+        <ImageCropModal
+          imageUrl={croppingImage}
+          aspect={aspect}
+          onConfirm={(croppedBase64) => {
+            onChange(croppedBase64);
+            setCroppingImage(null);
+          }}
+          onCancel={() => {
+            setCroppingImage(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function MainApp() {
   const {
@@ -75,6 +429,7 @@ export default function MainApp() {
   const [postAnonymously, setPostAnonymously] = useState(false);
   const [newPostImageUrls, setNewPostImageUrls] = useState<string[]>([]);
   const [newPostAspectRatio, setNewPostAspectRatio] = useState<'1:1' | '4:5' | '16:9' | 'original'>('4:5');
+  const [newPostAttachments, setNewPostAttachments] = useState<{ name: string; size: number; type: string; url: string; }[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [uploadProgressMap, setUploadProgressMap] = useState<Record<string, number>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
@@ -157,6 +512,27 @@ export default function MainApp() {
           return updated;
         });
       });
+    });
+  };
+
+  const handleAddAttachments = (files: File[]) => {
+    files.forEach(file => {
+      if (file.size > 15 * 1024 * 1024) {
+        triggerToast(`"${file.name}" is over 15MB — please choose a smaller file.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const attachment = {
+          name: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          url: reader.result as string
+        };
+        setNewPostAttachments(prev => [...prev, attachment]);
+      };
+      reader.readAsDataURL(file);
     });
   };
 
@@ -381,7 +757,7 @@ export default function MainApp() {
   // Handle post submit
   const handlePostSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!newPostContent.trim() && newPostImageUrls.length === 0 && !newPostLinkUrl.trim()) return;
+    if (!newPostContent.trim() && newPostImageUrls.length === 0 && !newPostLinkUrl.trim() && newPostAttachments.length === 0) return;
 
     setIsPublishing(true);
 
@@ -399,7 +775,8 @@ export default function MainApp() {
         linkUrl: newPostType === 'link' ? newPostLinkUrl : undefined,
         linkTitle: newPostType === 'link' ? newPostLinkTitle : undefined,
         spaceId: newPostSpaceId || activeSpaceId || undefined,
-        isAnonymous: postAnonymously
+        isAnonymous: postAnonymously,
+        attachments: newPostAttachments.length > 0 ? newPostAttachments : undefined
       });
 
       setNewPostTitle('');
@@ -408,6 +785,7 @@ export default function MainApp() {
       setNewPostImageUrl('');
       setNewPostImageUrls([]);
       setNewPostAspectRatio('4:5');
+      setNewPostAttachments([]);
       setNewPostLinkUrl('');
       setNewPostLinkTitle('');
       setNewPostSpaceId('');
@@ -485,7 +863,7 @@ export default function MainApp() {
   ];
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] transition-colors duration-300 pb-24 md:pb-0 flex selection:bg-[var(--brand-blue)]/30 selection:text-blue-200 font-sans">
+    <div id="app-root-container" className="min-h-screen bg-[var(--bg-app)] text-[var(--text-secondary)] transition-colors duration-300 pb-24 md:pb-0 flex flex-col md:flex-row selection:bg-[var(--brand-blue)]/30 selection:text-blue-200 font-sans">
       
       {/* DESKTOP SIDEBAR NAVIGATION */}
       <aside className="hidden md:flex flex-col justify-between w-64 border-r border-[var(--border-color)] bg-[var(--bg-app)] p-6 h-screen sticky top-0 shrink-0 z-40 select-none backdrop-blur-md">
@@ -602,55 +980,21 @@ export default function MainApp() {
 
       {/* MOBILE HEADER */}
       <header
-        className={`md:hidden flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-color)] bg-[var(--bg-surface)] sticky top-0 z-40 w-full select-none transition-shadow duration-200 ${
+        className={`md:hidden flex items-center justify-center px-4 py-2 border-b border-[var(--border-color)] bg-[var(--bg-surface)] sticky top-0 z-40 w-full select-none transition-shadow duration-200 ${
           isHeaderScrolled ? 'shadow-[0_2px_10px_-2px_rgba(0,0,0,0.08)]' : ''
         }`}
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.625rem)' }}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.4rem)', paddingBottom: '0.4rem' }}
       >
-        <div className="flex items-center gap-3">
-          <button
-            id="mobile-hamburger-btn"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-[var(--text-primary)] transition-all cursor-pointer"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          
-          <span 
-            onClick={() => {
-              setAppTab('home');
-              setActiveSpaceId(null);
-              setActiveUserId(null);
-              setActivePostId(null);
-            }}
-            className="cursor-pointer"
-          >
-            <PakSpaceLogo showText={true} horizontal={true} size="sm" />
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-1">
-          <button
-            id="mobile-settings-btn"
-            onClick={() => setIsSettingsOpen(true)}
-            title="Settings"
-            className="p-1.5 rounded-lg text-gray-400"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-          
-          <img 
-            src={currentUser.avatarUrl} 
-            alt={currentUser.name} 
-            onClick={() => {
-              setAppTab('profile');
-              setActiveUserId(null);
-              setActiveSpaceId(null);
-              setActivePostId(null);
-            }}
-            className="w-7 h-7 rounded-full object-cover border border-white/10"
-            referrerPolicy="no-referrer"
-          />
+        <div 
+          onClick={() => {
+            setAppTab('home');
+            setActiveSpaceId(null);
+            setActiveUserId(null);
+            setActivePostId(null);
+          }}
+          className="cursor-pointer flex items-center justify-center"
+        >
+          <PakSpaceLogo showText={true} horizontal={true} size="sm" />
         </div>
       </header>
 
@@ -776,17 +1120,16 @@ export default function MainApp() {
         )}
       </AnimatePresence>
 
-      {/* MOBILE BOTTOM NAVIGATION — fixed, Instagram/Threads style */}
+      {/* MOBILE BOTTOM NAVIGATION — Redesigned modern, glassmorphic premium layout */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-surface)] border-t border-[var(--border-color)]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-xl border-t border-[var(--border-color)] shadow-[0_-10px_30px_-5px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_30px_-5px_rgba(0,0,0,0.6)]"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.2rem)' }}
       >
-        <div className="flex items-stretch justify-between px-0.5">
+        <div className="flex items-stretch justify-between px-2 h-16">
           {[
             { id: 'home', label: 'Home', icon: Home },
             { id: 'spaces', label: 'Spaces', icon: Users },
-            { id: 'messages', label: 'Messages', icon: MessageSquare },
-            { id: 'create', label: 'Create', icon: Plus },
+            { id: 'create', label: 'Add Post', icon: Plus },
             { id: 'market', label: 'Marketplace', icon: ShoppingBag },
             { id: 'profile', label: 'Profile', icon: UserIcon }
           ].map((item) => {
@@ -797,12 +1140,14 @@ export default function MainApp() {
                   key={item.id}
                   id="mobile-bottomnav-create-btn"
                   onClick={() => setIsCreatePostOpen(true)}
-                  className="flex-1 flex flex-col items-center justify-center gap-1 py-2 cursor-pointer group min-w-0"
+                  className="flex-grow flex flex-col items-center justify-center relative cursor-pointer group min-w-[64px]"
                 >
-                  <span className="w-10 h-10 -mt-4 rounded-2xl bg-[var(--brand-blue)] text-white shadow-lg shadow-blue-950/30 flex items-center justify-center transition-transform group-active:scale-90">
-                    <Icon className="w-5 h-5" />
+                  <div className="w-11 h-11 -mt-5 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30 flex items-center justify-center transition-all duration-300 group-active:scale-90 group-hover:scale-105 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                    <Icon className="w-5.5 h-5.5 stroke-[2.5]" />
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-1 tracking-wide">
+                    Post
                   </span>
-                  <span className="text-[9px] font-semibold text-gray-400">Create</span>
                 </button>
               );
             }
@@ -820,15 +1165,33 @@ export default function MainApp() {
                   setActiveUserId(null);
                   setActivePostId(null);
                 }}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 cursor-pointer transition-all active:scale-95 min-w-0"
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 relative cursor-pointer select-none transition-all active:scale-95 min-w-0"
               >
-                <Icon
-                  className={`w-5 h-5 ${active ? 'text-[var(--brand-blue)]' : 'text-gray-400'}`}
-                  strokeWidth={active ? 2.4 : 2}
-                />
-                <span className={`text-[9px] font-semibold truncate ${active ? 'text-[var(--brand-blue)]' : 'text-gray-400'}`}>
-                  {item.label}
-                </span>
+                <div className="relative p-1.5 flex flex-col items-center justify-center">
+                  <Icon
+                    className={`w-[21px] h-[21px] transition-all duration-300 ${
+                      active 
+                        ? 'text-blue-500 dark:text-blue-400 scale-110 drop-shadow-[0_0_6px_rgba(59,130,246,0.3)]' 
+                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                    }`}
+                    strokeWidth={active ? 2.4 : 2}
+                  />
+                  <span className={`text-[9px] font-semibold mt-0.5 tracking-wide transition-colors duration-300 ${
+                    active 
+                      ? 'text-blue-500 dark:text-blue-400 font-bold' 
+                      : 'text-gray-400'
+                  }`}>
+                    {item.label}
+                  </span>
+
+                  {active && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="absolute -bottom-1 w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+                    />
+                  )}
+                </div>
               </button>
             );
           })}
@@ -915,7 +1278,7 @@ export default function MainApp() {
                 {appTab === 'notifications' && <NotificationsView />}
 
                 {/* 6. PROFILE TAB */}
-                {appTab === 'profile' && <MyProfileView onEditProfileClick={() => setIsEditProfileOpen(true)} />}
+                {appTab === 'profile' && <MyProfileView onEditProfileClick={() => setIsEditProfileOpen(true)} onSettingsClick={() => setIsSettingsOpen(true)} />}
               </>
             )}
           </>
@@ -955,6 +1318,9 @@ export default function MainApp() {
                 isPublishing={isPublishing}
                 onSubmit={handlePostSubmit}
                 onClose={() => setIsCreatePostOpen(false)}
+                attachments={newPostAttachments}
+                onAddAttachments={handleAddAttachments}
+                onRemoveAttachment={(idx) => setNewPostAttachments(prev => prev.filter((_, i) => i !== idx))}
               />
             </motion.div>
           </div>
@@ -1011,26 +1377,18 @@ export default function MainApp() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1 text-left">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Logo Image URL (Optional)</label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/logo..."
-                      value={newSpaceLogo}
-                      onChange={(e) => setNewSpaceLogo(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
-                    />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Banner Image URL (Optional)</label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/banner..."
-                      value={newSpaceBanner}
-                      onChange={(e) => setNewSpaceBanner(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
-                    />
-                  </div>
+                  <ImageUploadField
+                    label="Space Logo (Optional)"
+                    value={newSpaceLogo}
+                    onChange={setNewSpaceLogo}
+                    aspect="1:1"
+                  />
+                  <ImageUploadField
+                    label="Space Banner (Optional)"
+                    value={newSpaceBanner}
+                    onChange={setNewSpaceBanner}
+                    aspect="16:9"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1110,45 +1468,21 @@ export default function MainApp() {
                       className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.02] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)] focus:bg-white/[0.04] transition-all"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block">Avatar Photo</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setEditAvatarUrl(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
-                    />
-                  </div>
+                  <ImageUploadField
+                    label="Avatar Photo"
+                    value={editAvatarUrl}
+                    onChange={setEditAvatarUrl}
+                    aspect="1:1"
+                  />
                 </div>
 
                 {/* Banner/Cover Image Upload */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block">Profile Banner Cover</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setEditCoverUrl(reader.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer"
-                  />
-                </div>
+                <ImageUploadField
+                  label="Profile Banner Cover"
+                  value={editCoverUrl}
+                  onChange={setEditCoverUrl}
+                  aspect="16:9"
+                />
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Short Bio</label>
@@ -2048,7 +2382,7 @@ function NotificationsView() {
 }
 
 // 5. CURRENT USER PROFILE TAB
-function MyProfileView({ onEditProfileClick }: { onEditProfileClick: () => void }) {
+function MyProfileView({ onEditProfileClick, onSettingsClick }: { onEditProfileClick: () => void; onSettingsClick?: () => void }) {
   const { currentUser } = useApp();
   
   if (!currentUser) return null;
@@ -2058,6 +2392,7 @@ function MyProfileView({ onEditProfileClick }: { onEditProfileClick: () => void 
       userId={currentUser.id} 
       onBack={null} 
       onEditProfileClick={onEditProfileClick}
+      onSettingsClick={onSettingsClick}
     />
   );
 }
@@ -2208,7 +2543,7 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
   };
 
   return (
-    <div className="feed-post feed-divider py-6 sm:py-8 first:pt-0 text-left space-y-4 relative">
+    <div className="feed-post feed-divider py-5 text-left space-y-4 relative w-full border-b border-white/[0.06]">
       {/* Visual Indicator for Live Preview mode */}
       {isPreview && (
         <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 text-[9px] text-center font-bold text-blue-400 py-1 uppercase tracking-widest border-b border-blue-500/10 select-none rounded-t-lg -mt-2 mb-2">
@@ -2216,146 +2551,126 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
         </div>
       )}
 
-      {/* Header section */}
-      <div className="flex justify-between items-start select-none">
-        <div className="flex items-center space-x-3 min-w-0">
-          <img 
-            onClick={() => {
-              if (isPreview || post.isAnonymous) return;
-              setActiveUserId(postAuthor.id);
-              if (onBack) onBack();
-            }}
-            src={post.isAnonymous ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' : postAuthor.avatarUrl} 
-            alt={post.isAnonymous ? 'Anonymous' : postAuthor.name} 
-            loading="lazy"
-            decoding="async"
-            className={`w-9 h-9 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
-            referrerPolicy="no-referrer"
-          />
-          <div className="min-w-0">
+      {/* 1-4. Header with Avatar, Name, University, Timestamp */}
+      <div className="flex items-start space-x-3 w-full select-none">
+        {/* User Avatar */}
+        <img 
+          onClick={() => {
+            if (isPreview || post.isAnonymous) return;
+            setActiveUserId(postAuthor.id);
+            if (onBack) onBack();
+          }}
+          src={post.isAnonymous ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' : postAuthor.avatarUrl} 
+          alt={post.isAnonymous ? 'Anonymous' : postAuthor.name} 
+          loading="lazy"
+          className={`w-10 h-10 rounded-full object-cover border border-white/10 shrink-0 ${isPreview || post.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:opacity-90 transition-all'}`}
+          referrerPolicy="no-referrer"
+        />
+        
+        {/* Author details */}
+        <div className="flex-grow min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+          <div className="min-w-0 text-left">
+            {/* Name */}
             <span 
               onClick={() => {
                 if (isPreview || post.isAnonymous) return;
                 setActiveUserId(postAuthor.id);
                 if (onBack) onBack();
               }}
-              className={`font-sans font-bold text-[var(--text-primary)] text-[14px] leading-tight block ${isPreview || post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+              className={`font-sans font-bold text-[var(--text-primary)] text-sm leading-tight block ${isPreview || post.isAnonymous ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
             >
               {post.isAnonymous ? (post.anonymousName || 'Anonymous Student') : postAuthor.name}
             </span>
-            {/* Substack-style small-caps byline: university/anon badge · timestamp */}
-            <div className="feed-byline flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 min-w-0">
+            
+            {/* University */}
+            <div className="text-xs text-gray-400 mt-0.5 truncate max-w-[260px]">
               {post.isAnonymous ? (
-                <span className="text-red-400 flex items-center gap-0.5 shrink-0 normal-case tracking-normal font-mono text-[9px]">
-                  <Lock className="w-2.5 h-2.5 shrink-0" />
-                  ANONYMOUS
+                <span className="text-red-400 font-mono text-[10px] flex items-center gap-1 leading-none">
+                  <Lock className="w-3 h-3 inline" /> ANONYMOUS
                 </span>
               ) : postAuthor.universityName ? (
-                <span className="truncate max-w-[160px] shrink-0">
+                <span className="text-gray-400">
                   {postAuthor.universityName.split(',')[0]}
                 </span>
-              ) : null}
-              <span className="text-gray-400 shrink-0 select-none normal-case">•</span>
-              <span className="shrink-0">
-                {formatTime(post.createdAt)}
-              </span>
+              ) : (
+                <span className="text-gray-500">Verified Member</span>
+              )}
             </div>
           </div>
-        </div>
+          
+          {/* Timestamp & Meta buttons */}
+          <div className="flex items-center space-x-2.5 text-xs text-gray-500 self-start sm:self-center">
+            {/* Timestamp */}
+            <span className="text-[11px] whitespace-nowrap">{formatTime(post.createdAt)}</span>
+            
+            {post.spaceId && (
+              <span 
+                onClick={() => {
+                  if (isPreview) return;
+                  setActiveSpaceId(post.spaceId!);
+                  if (onBack) onBack();
+                }}
+                className="text-[9px] bg-blue-600/10 text-blue-400 font-bold px-1.5 py-0.5 rounded-md hover:underline cursor-pointer shrink-0"
+              >
+                in {spaces.find(s => s.id === post.spaceId)?.name || 'Space'}
+              </span>
+            )}
 
-        {/* Action column on the right */}
-        <div className="flex items-center space-x-2 shrink-0">
-          {post.spaceId && (
-            <span 
-              onClick={() => {
-                if (isPreview) return;
-                setActiveSpaceId(post.spaceId!);
-                if (onBack) onBack();
-              }}
-              className="text-[9px] bg-blue-600/10 text-blue-400 font-bold px-2 py-1 rounded-lg hover:underline cursor-pointer shrink-0"
-            >
-              in {spaces.find(s => s.id === post.spaceId)?.name || 'Space'}
-            </span>
-          )}
+            {!isPreview && !isOwner && !post.isAnonymous && (
+              <button
+                onClick={() => toggleFollow(postAuthor.id)}
+                className={`text-[10px] font-bold hover:underline bg-transparent border-none cursor-pointer shrink-0 ${
+                  currentUser.interests.includes(`following-${postAuthor.id}`)
+                    ? 'text-gray-400'
+                    : 'text-blue-400'
+                }`}
+              >
+                {currentUser.interests.includes(`following-${postAuthor.id}`) ? 'Following' : 'Follow'}
+              </button>
+            )}
 
-          {!isPreview && !isOwner && !post.isAnonymous && (
-            <button
-              onClick={() => toggleFollow(postAuthor.id)}
-              className={`text-[10px] font-bold hover:underline bg-transparent border-none cursor-pointer shrink-0 ${
-                currentUser.interests.includes(`following-${postAuthor.id}`)
-                  ? 'text-gray-400'
-                  : 'text-blue-400'
-              }`}
-            >
-              {currentUser.interests.includes(`following-${postAuthor.id}`) ? 'Following' : 'Follow'}
-            </button>
-          )}
-
-          {!isPreview && (isOwner || (post.spaceId && (() => {
-            const sp = spaces.find(s => s.id === post.spaceId);
-            return sp ? (sp.ownerId === currentUser.id || (sp.admins || []).includes(currentUser.id) || (sp.moderators || []).includes(currentUser.id)) : false;
-          })())) && (
-            <button
-              onClick={() => {
-                if (confirm("Are you sure you want to delete this post permanently?")) {
-                  deletePost(post.id);
-                }
-              }}
-              className="text-[10px] font-bold text-red-400 hover:text-red-300 hover:underline bg-transparent border-none cursor-pointer p-0 shrink-0 flex items-center"
-              title="Delete Post"
-            >
-              Delete
-            </button>
-          )}
+            {!isPreview && (isOwner || (post.spaceId && (() => {
+              const sp = spaces.find(s => s.id === post.spaceId);
+              return sp ? (sp.ownerId === currentUser.id || (sp.admins || []).includes(currentUser.id) || (sp.moderators || []).includes(currentUser.id)) : false;
+            })())) && (
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete this post permanently?")) {
+                    deletePost(post.id);
+                  }
+                }}
+                className="text-[10px] font-bold text-red-400 hover:text-red-350 hover:underline bg-transparent border-none cursor-pointer p-0 shrink-0"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Post body content */}
-      <div className="space-y-4">
+      {/* 5. Post Content */}
+      <div className="pl-0 sm:pl-13 space-y-3 text-left w-full">
         {post.title && (
-          <h2 className="feed-title text-[21px] sm:text-[26px]">
+          <h2 className="feed-title text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-snug tracking-tight">
             {post.title}
           </h2>
         )}
 
-        {/* Photos display: full-bleed banner above the text, Substack-style,
-            with an Instagram-style swipe when there's more than one image */}
-        {post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0 ? (
-          <ImageCarousel
-            images={post.imageUrls}
-            fit="cover"
-            rounded="rounded-xl"
-            aspectClassName="aspect-[16/9]"
-            onImageClick={(url) => setLightboxUrl(url)}
-            showCounter={post.imageUrls.length > 1}
-          />
-        ) : post.imageUrl ? (
-          <ImageCarousel
-            images={[post.imageUrl]}
-            fit="cover"
-            rounded="rounded-xl"
-            aspectClassName="aspect-[16/9]"
-            onImageClick={(url) => setLightboxUrl(url)}
-            showDots={false}
-          />
-        ) : null}
-
         {post.content.startsWith('<') || post.content.includes('</') ? (
           <div 
-            className="feed-body rich-text-content prose dark:prose-invert max-w-none break-words"
+            className="feed-body rich-text-content prose dark:prose-invert max-w-none break-words text-sm sm:text-base leading-relaxed text-[var(--text-primary)]"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         ) : (
-          <p className="feed-body whitespace-pre-wrap break-words">{post.content}</p>
+          <p className="feed-body whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed text-[var(--text-primary)]">{post.content}</p>
         )}
 
-        {/* Link attachments */}
         {post.linkUrl && (
           <a
             href={post.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block p-3 border border-[var(--border-color)] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] transition-colors"
+            className="block p-3 border border-white/[0.06] rounded-xl bg-white/[0.01] hover:bg-white/[0.03] transition-colors"
           >
             <div className="flex justify-between items-center text-xs">
               <div className="min-w-0 text-left">
@@ -2368,51 +2683,100 @@ function PostCard({ post, onBack, isPreview = false }: { post: Post; onBack?: ()
         )}
       </div>
 
-      {/* Action Bar */}
-      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] text-gray-400 text-xs select-none">
-        <div className="flex items-center space-x-5">
-          <button
-            disabled={isPreview}
-            onClick={() => toggleLike(post.id)}
-            className={`flex items-center space-x-1.5 hover:text-red-450 transition-colors cursor-pointer disabled:opacity-50 ${
-              hasLiked ? 'text-red-400 font-bold animate-pulse' : ''
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${hasLiked ? 'fill-red-500 stroke-red-500' : ''}`} />
-            <span className="text-xs">{post.likes.length}</span>
-          </button>
-
-          <button
-            disabled={isPreview}
-            onClick={() => setShowCommentsSection(!showCommentsSection)}
-            className={`flex items-center space-x-1.5 hover:text-blue-450 transition-colors cursor-pointer disabled:opacity-50 ${
-              showCommentsSection ? 'text-blue-400 font-bold' : ''
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="text-xs">{postComments.length}</span>
-          </button>
+      {/* 6. Images */}
+      {((post.postType === 'photo' && post.imageUrls && post.imageUrls.length > 0) || post.imageUrl) && (
+        <div className="pl-0 sm:pl-13 w-full">
+          <ImageCarousel
+            images={post.imageUrls && post.imageUrls.length > 0 ? post.imageUrls : [post.imageUrl!]}
+            fit="contain"
+            rounded="rounded-2xl"
+            aspectClassName=""
+            maxHeight="400px"
+            onImageClick={(url) => setLightboxUrl(url)}
+            showCounter={(post.imageUrls || []).length > 1}
+            showDots={(post.imageUrls || []).length > 1}
+          />
         </div>
+      )}
 
-        <div className="flex items-center space-x-4">
+      {/* Attachments (Documents/Files) */}
+      {post.attachments && post.attachments.length > 0 && (
+        <div className="pl-0 sm:pl-13 w-full mt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {post.attachments.map((file, idx) => (
+              <a
+                key={idx}
+                href={file.url}
+                download={file.name}
+                className="flex items-center justify-between p-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-xl text-xs transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white truncate group-hover:text-blue-400 transition-colors">{file.name}</p>
+                    <p className="text-[10px] text-gray-500 font-mono">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  </div>
+                </div>
+                <span className="text-[10px] text-blue-400 group-hover:underline font-bold tracking-wide uppercase shrink-0">Download</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7-10. Action Bar (Like, Comment, Share, Save) */}
+      <div className="pl-0 sm:pl-13 pt-2 w-full">
+        <div className="flex items-center justify-between border-t border-white/[0.06] pt-3 text-gray-400 text-xs select-none">
+          <div className="flex items-center space-x-6">
+            {/* Like */}
+            <button
+              disabled={isPreview}
+              onClick={() => toggleLike(post.id)}
+              className={`flex items-center space-x-1.5 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50 ${
+                hasLiked ? 'text-red-400 font-bold animate-pulse' : ''
+              }`}
+              title="Like"
+            >
+              <Heart className={`w-4 h-4 ${hasLiked ? 'fill-red-500 stroke-red-500' : ''}`} />
+              <span className="text-xs">{post.likes.length}</span>
+            </button>
+
+            {/* Comment */}
+            <button
+              disabled={isPreview}
+              onClick={() => setShowCommentsSection(!showCommentsSection)}
+              className={`flex items-center space-x-1.5 hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50 ${
+                showCommentsSection ? 'text-blue-400 font-bold' : ''
+              }`}
+              title="Comment"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="text-xs">{postComments.length}</span>
+            </button>
+
+            {/* Share */}
+            <button
+              disabled={isPreview}
+              onClick={() => handleSharePost(post.id)}
+              className="flex items-center space-x-1.5 hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50"
+              title="Share"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Share</span>
+            </button>
+          </div>
+
+          {/* Save (Bookmark) */}
           <button
             disabled={isPreview}
             onClick={() => toggleBookmark(post.id)}
-            className={`hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50 ${
+            className={`flex items-center space-x-1.5 hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50 ${
               hasBookmarked ? 'text-blue-400 fill-blue-500/10 stroke-blue-400' : ''
             }`}
-            title="Bookmark post"
+            title="Save"
           >
             <Bookmark className="w-4 h-4" />
-          </button>
-
-          <button
-            disabled={isPreview}
-            onClick={() => handleSharePost(post.id)}
-            className="hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50"
-            title="Share link"
-          >
-            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:inline text-[11px]">{hasBookmarked ? 'Saved' : 'Save'}</span>
           </button>
         </div>
       </div>
@@ -2696,7 +3060,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
         >
           Discussions (Feed)
           {activeSubTab === 'feed' && (
-            <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 origin-center" />
           )}
         </button>
         <button
@@ -2707,7 +3071,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
         >
           Members ({space.members.length})
           {activeSubTab === 'members' && (
-            <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 origin-center" />
           )}
         </button>
         {isAdmin && (
@@ -2719,7 +3083,7 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
           >
             Settings & Moderation
             {activeSubTab === 'settings' && (
-              <motion.div layoutId="spaceActiveTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 origin-center" />
             )}
           </button>
         )}
@@ -2998,24 +3362,18 @@ function SpaceView({ spaceId, onBack }: { spaceId: string; onBack: () => void })
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Logo Image URL</label>
-                  <input
-                    type="url"
-                    value={editLogoUrl}
-                    onChange={(e) => setEditLogoUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Banner Image URL</label>
-                  <input
-                    type="url"
-                    value={editBannerUrl}
-                    onChange={(e) => setEditBannerUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/[0.06] rounded-xl bg-white/[0.01] text-xs focus:outline-none focus:border-blue-500 text-[var(--text-primary)]"
-                  />
-                </div>
+                <ImageUploadField
+                  label="Space Logo"
+                  value={editLogoUrl}
+                  onChange={setEditLogoUrl}
+                  aspect="1:1"
+                />
+                <ImageUploadField
+                  label="Space Banner"
+                  value={editBannerUrl}
+                  onChange={setEditBannerUrl}
+                  aspect="16:9"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3087,9 +3445,10 @@ interface UserProfileProps {
   userId: string;
   onBack: (() => void) | null;
   onEditProfileClick?: () => void;
+  onSettingsClick?: () => void;
 }
 
-function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProps) {
+function UserProfileView({ userId, onBack, onEditProfileClick, onSettingsClick }: UserProfileProps) {
   const { currentUser, users, posts, spaces, toggleFollow, setActiveSpaceId } = useApp();
   const [profileTab, setProfileTab] = useState<'posts' | 'saved' | 'spaces'>('posts');
 
@@ -3116,20 +3475,20 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
         </button>
       )}
 
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl overflow-hidden text-left shadow-xl">
-        <div className="h-40 bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-[var(--bg-surface-2)] relative select-none">
+      <div className="bg-[#0c0c0e] border border-white/[0.06] rounded-3xl overflow-hidden text-left shadow-xl">
+        <div className="h-44 relative overflow-hidden select-none">
           {user.coverUrl ? (
             <img src={user.coverUrl} alt="Cover" className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/45 to-[var(--bg-surface-2)]/90 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/45 to-zinc-900 flex items-center justify-center">
               <span className="text-[10px] font-mono tracking-widest text-[var(--brand-blue)] uppercase">PAKSYNC VERIFIED</span>
             </div>
           )}
         </div>
 
-        <div className="p-6 relative space-y-4">
+        <div className="p-6 relative space-y-4 bg-[#0c0c0e]">
           <div className="absolute -top-12 left-6">
-            <img src={user.avatarUrl} alt={user.name} className="w-20 h-20 rounded-full object-cover border-4 border-[var(--bg-surface-2)] shadow-md bg-[var(--bg-surface-2)]" referrerPolicy="no-referrer" />
+            <img src={user.avatarUrl} alt={user.name} className="w-20 h-20 rounded-full object-cover border-4 border-[#0c0c0e] shadow-md bg-[#0c0c0e]" referrerPolicy="no-referrer" />
           </div>
 
           <div className="pt-8 flex justify-between items-start">
@@ -3140,12 +3499,23 @@ function UserProfileView({ userId, onBack, onEditProfileClick }: UserProfileProp
 
             <div>
               {isMe ? (
-                <button
-                  onClick={onEditProfileClick}
-                  className="px-4 py-2 border border-white/10 rounded-xl text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer text-[var(--text-primary)]"
-                >
-                  Edit Profile
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onEditProfileClick}
+                    className="px-4 py-2 border border-white/10 rounded-xl text-xs font-semibold hover:bg-white/5 transition-all cursor-pointer text-[var(--text-primary)]"
+                  >
+                    Edit Profile
+                  </button>
+                  {onSettingsClick && (
+                    <button
+                      onClick={onSettingsClick}
+                      className="p-2 border border-white/10 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                      title="Settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => toggleFollow(user.id)}

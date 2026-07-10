@@ -17,7 +17,7 @@
 /*
   PakSpace theme system.
   Light (default): Sky & Sand colors.
-  Dark: Deep Midnight Sky colors.
+  Dark: Pure Obsidian Black theme.
 */
 :root {
   --bg-app: #FAF7EE;
@@ -36,22 +36,28 @@
 }
 
 .dark {
-  --bg-app: #0F172A;
-  --bg-surface: #1E293B;
-  --bg-surface-2: #1E293B;
-  --bg-elevated: #1E293B;
-  --border-color: #334155;
-  --border-strong: #475569;
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --bg-app: #050505;
+  --bg-surface: #0c0c0e;
+  --bg-surface-2: #141416;
+  --bg-elevated: #18181b;
+  --border-color: #202024;
+  --border-strong: #2d2d34;
+  --text-primary: #f4f4f7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
   --brand-blue: #3B82F6;
   --brand-blue-hover: #60A5FA;
-  --scrollbar-thumb: #334155;
-  --scrollbar-thumb-hover: #475569;
+  --scrollbar-thumb: #202024;
+  --scrollbar-thumb-hover: #2d2d34;
 }
 
 /* Custom premium styles */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  height: 100%;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-app);
@@ -59,6 +65,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+  min-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar customization */

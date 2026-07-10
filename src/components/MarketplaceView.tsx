@@ -18,7 +18,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ImageCarousel } from './ImageCarousel';
 
 export function MarketplaceView() {
   const { 
@@ -48,7 +47,6 @@ export function MarketplaceView() {
   const [newCondition, setNewCondition] = useState<Product['condition']>('Used');
   const [newDescription, setNewDescription] = useState('');
   const [newLocation, setNewLocation] = useState('');
-  const [imageInput, setImageInput] = useState('');
   const [imageList, setImageList] = useState<string[]>([]);
 
   // DM flow inside details
@@ -91,16 +89,6 @@ export function MarketplaceView() {
     } as User;
   };
 
-  const handleAddImage = () => {
-    if (!imageInput.trim()) return;
-    if (!imageInput.startsWith('http://') && !imageInput.startsWith('https://')) {
-      triggerToast('Please provide a valid image URL 🌐');
-      return;
-    }
-    setImageList([...imageList, imageInput.trim()]);
-    setImageInput('');
-  };
-
   const handleRemoveImage = (index: number) => {
     setImageList(imageList.filter((_, i) => i !== index));
   };
@@ -136,7 +124,6 @@ export function MarketplaceView() {
     setNewDescription('');
     setNewLocation('');
     setImageList([]);
-    setImageInput('');
     setIsSellModalOpen(false);
   };
 
@@ -389,37 +376,32 @@ export function MarketplaceView() {
                 
                 {/* Image Showcase */}
                 <div className="space-y-3">
-                  <div className="relative">
-                    <ImageCarousel
-                      images={selectedProduct.images}
-                      index={activeImageIdx}
-                      onIndexChange={setActiveImageIdx}
-                      aspectClassName="aspect-[4/3] md:aspect-[4/3]"
-                      rounded="rounded-xl"
-                      showDots={false}
-                      showCounter={selectedProduct.images.length > 1}
-                      imgClassName="object-contain bg-[var(--bg-app)]"
-                      alt={selectedProduct.title}
+                  <div className="h-72 md:h-96 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-app)] relative">
+                    <img 
+                      src={selectedProduct.images[activeImageIdx] || selectedProduct.images[0]} 
+                      alt={selectedProduct.title} 
+                      className="w-full h-full object-contain"
+                      referrerPolicy="no-referrer"
                     />
-                    <div className="absolute top-4 left-4 bg-[var(--bg-app)]/90 text-blue-400 font-mono text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-[var(--border-color)] pointer-events-none">
+                    <div className="absolute top-4 left-4 bg-[var(--bg-app)]/90 text-blue-400 font-mono text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-[var(--border-color)]">
                       {selectedProduct.condition}
                     </div>
                   </div>
 
                   {/* Thumbnail gallery */}
                   {selectedProduct.images.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <div className="flex gap-2">
                       {selectedProduct.images.map((img, idx) => (
                         <div 
                           key={idx} 
                           onClick={() => setActiveImageIdx(idx)}
-                          className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border cursor-pointer transition-all ${
+                          className={`w-16 h-16 rounded-lg overflow-hidden border cursor-pointer transition-all ${
                             activeImageIdx === idx 
                               ? 'border-blue-500 scale-105' 
                               : 'border-[var(--border-color)] hover:border-gray-500 opacity-80'
                           } bg-[var(--bg-app)]`}
                         >
-                          <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+                          <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
                       ))}
                     </div>
@@ -543,7 +525,7 @@ export function MarketplaceView() {
                           setAppTab('messages');
                         }
                       }}
-                      className="w-full py-4 md:py-3 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-mono font-bold rounded-xl text-sm md:text-xs transition-all cursor-pointer shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5"
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5"
                     >
                       <ShoppingBag className="w-4 h-4" />
                       BUY THIS ITEM (QUICK CHAT)
